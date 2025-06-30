@@ -81,8 +81,10 @@ API documentation for each module is available in the [docs](docs/) folder:
 
 - [Auth Module](docs/auth.md)
 - [User Module](docs/user.md)
-- [Category Module](docs/category.md)
-- [Product Module](docs/product.md)
+- [Blog Category Module](docs/blog-category.md)
+- [Blog Module](docs/blog.md)
+- [Template Category Module](docs/category.md)
+- [Template Module](docs/product.md)
 - [Order Module](docs/order.md)
 - [Review Module](docs/review.md)
 - [Chat Module](docs/chat.md)
