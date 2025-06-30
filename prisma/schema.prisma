@@ -1,0 +1,226 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  PAYPAL
+  STRIPE
+  BANK_TRANSFER
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  DELIVERED
+  CANCELLED
+}
+
+enum DeliveryMethod {
+  DOWNLOAD
+  EMAIL
+}
+
+enum NotificationType {
+  PAYMENT_CONFIRMED
+  TEMPLATE_DELIVERED
+  BLOG_COMMENT
+  ACCOUNT_UPDATE
+}
+
+model User {
+  id            String         @id @default(uuid())
+  displayName   String
+  email         String         @unique
+  password      String
+  photoUrl      String?
+  designation   String?
+  role          UserRole       @default(USER)
+  phone         String?
+  country       String?
+  city          String?
+  stateOrRegion String?
+  postCode      String?
+  balance       Float          @default(0.0)
+  purchases     Template[]     @relation("UserPurchases")
+  blogs         Blog[]         @relation("BlogAuthor")
+  orders        OrderInvoice[] @relation("UserOrders")
+  notifications Notification[] @relation("UserNotifications")
+  blogLikes     BlogLike[]     @relation("UserLikes")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  otpCode        String?    // 6-digit code
+  otpExpiresAt   DateTime?  // Expiry for OTP
+  isVerified     Boolean    @default(false)
+  refreshToken   String?    // For refresh token storage (optional, for logout)
+
+  @@index([email])
+  @@map("users")
+}
+
+model TemplateCategory {
+  id            String     @id @default(uuid())
+  title         String
+  imageUrl      String?
+  templateCount Int        @default(0)
+  slug          String     @unique
+  templates     Template[] @relation("CategoryTemplates")
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([slug])
+  @@map("template_categories")
+}
+
+model Template {
+  id               String           @id @default(uuid())
+  title            String
+  price            Float
+  imageUrl         String?
+  categoryId       String
+  category         TemplateCategory @relation("CategoryTemplates", fields: [categoryId], references: [id])
+  version          Float
+  publishedDate    DateTime
+  downloads        Int              @default(0)
+  pages            Int              @default(1)
+  views            Int              @default(0)
+  totalPurchase    Int              @default(0)
+  previewLink      String?
+  shortDescription String
+  description      String
+  whatsIncluded    String[]
+  keyFeatures      Json[]
+  screenshots      String[]
+  purchasedBy      User[]           @relation("UserPurchases")
+  orders           OrderInvoice[]   @relation("TemplateOrders")
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@map("templates")
+}
+
+model BlogCategory {
+  id        String   @id @default(uuid())
+  title     String
+  imageUrl  String?
+  blogCount Int      @default(0)
+  slug      String   @unique
+  blogs     Blog[]   @relation("CategoryBlogs")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@map("blog_categories")
+}
+
+model Blog {
+  id          String       @id @default(uuid())
+  title       String
+  categoryId  String
+  category    BlogCategory @relation("CategoryBlogs", fields: [categoryId], references: [id])
+  imageUrl    String?
+  description String
+  likes       Int          @default(0)
+  readingTime Float
+  authorId    String
+  author      User         @relation("BlogAuthor", fields: [authorId], references: [id])
+  content     Json[]
+  reviews     BlogReview[] @relation("BlogReviews")
+  blogLikes   BlogLike[]   @relation("BlogLikes")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("blogs")
+}
+
+model BlogReview {
+  id          String   @id @default(uuid())
+  blogId      String
+  blog        Blog     @relation("BlogReviews", fields: [blogId], references: [id])
+  userName    String
+  commentDate DateTime @default(now())
+  photoUrl    String?
+  commentText String
+  reply       Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("blog_reviews")
+}
+
+model BlogLike {
+  id        String   @id @default(uuid())
+  blogId    String
+  blog      Blog     @relation("BlogLikes", fields: [blogId], references: [id])
+  userId    String
+  user      User     @relation("UserLikes", fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([blogId, userId])
+  @@map("blog_likes")
+}
+
+model OrderInvoice {
+  id                String         @id @default(uuid())
+  orderId           String         @unique
+  userId            String
+  user              User           @relation("UserOrders", fields: [userId], references: [id])
+  templateId        String
+  template          Template       @relation("TemplateOrders", fields: [templateId], references: [id])
+  templateName      String
+  templateThumbnail String?
+  templatePrice     Float
+  totalPrice        Float
+  paymentMethod     PaymentMethod
+  paymentStatus     PaymentStatus  @default(PENDING)
+  transactionId     String?
+  status            OrderStatus    @default(PENDING)
+  isDelivered       Boolean        @default(false)
+  deliveryMethod    DeliveryMethod
+  deliveryUrl       String?
+  invoiceNumber     String         @unique
+  invoiceDate       DateTime
+  userEmail         String
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([orderId, invoiceNumber])
+  @@map("order_invoices")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation("UserNotifications", fields: [userId], references: [id])
+  type      NotificationType
+  message   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([userId])
+  @@map("notifications")
+}
