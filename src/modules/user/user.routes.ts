@@ -3,14 +3,15 @@ import {
   getAllUsers,
   getUserById,
   updateUser,
-  updateUserRole,
+  updateUserRole
 } from './user.controller';
+import { authMiddleware } from '../../middlewares/auth';
 
 const router = Router();
 
-router.get('/users', getAllUsers); // admin only
-router.get('/users/:id', getUserById); // self or admin
-router.put('/users/:id', updateUser); // self or admin
-router.patch('/users/:id/role', updateUserRole); // admin only
+router.get('/users', authMiddleware, getAllUsers);
+router.get('/users/:id', authMiddleware, getUserById);
+router.put('/users/:id', authMiddleware, updateUser);
+router.put('/users/:id/role', authMiddleware, updateUserRole);
 
 export default router; 

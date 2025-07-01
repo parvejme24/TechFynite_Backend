@@ -9,7 +9,6 @@ import { templateCategoryRoutes } from "./modules/templateCategory";
 import { templateRoutes } from "./modules/template";
 import { blogCategoryRoutes } from "./modules/blogCategory";
 import { blogRoutes } from "./modules/blog";
-import { notificationRoutes } from "./modules/notification";
 import { orderRoutes } from "./modules/order";
 import { blogReviewRoutes } from "./modules/blogReview";
 
@@ -50,7 +49,6 @@ app.use("/api/v1", templateRoutes);
 app.use("/api/v1", blogCategoryRoutes);
 app.use("/api/v1", blogRoutes);
 app.use("/api/v1", blogReviewRoutes);
-app.use("/api/v1", notificationRoutes);
 app.use("/api/v1", orderRoutes);
 
 // error handling middleware
