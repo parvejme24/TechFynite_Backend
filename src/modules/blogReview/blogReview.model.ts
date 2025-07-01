@@ -3,11 +3,11 @@ import { PrismaClient, BlogReview } from '../../generated/prisma';
 const prisma = new PrismaClient();
 
 export const BlogReviewModel = {
-  findAll: async (): Promise<BlogReview[]> => {
-    return prisma.blogReview.findMany({ include: { blog: true } });
+  findByBlogId: async (blogId: string): Promise<BlogReview[]> => {
+    return prisma.blogReview.findMany({ where: { blogId } });
   },
   findById: async (id: string): Promise<BlogReview | null> => {
-    return prisma.blogReview.findUnique({ where: { id }, include: { blog: true } });
+    return prisma.blogReview.findUnique({ where: { id } });
   },
   create: async (data: any): Promise<BlogReview> => {
     return prisma.blogReview.create({ data });
@@ -18,7 +18,4 @@ export const BlogReviewModel = {
   delete: async (id: string): Promise<BlogReview> => {
     return prisma.blogReview.delete({ where: { id } });
   },
-  findByBlogId: async (blogId: string): Promise<BlogReview[]> => {
-    return prisma.blogReview.findMany({ where: { blogId } });
-  },
-}; 
+};

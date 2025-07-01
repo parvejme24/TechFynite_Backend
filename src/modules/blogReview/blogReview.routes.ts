@@ -1,21 +1,24 @@
-import { Router } from "express";
+import { Router } from 'express';
 import {
-  getAllBlogReviews,
+  getBlogReviewsByBlogId,
   getBlogReviewById,
   createBlogReview,
   updateBlogReview,
   deleteBlogReview,
-} from "./blogReview.controller";
-import { authMiddleware } from "../../middlewares/auth";
-import { checkReviewOwnership } from './blogReview.middleware';
+  replyToBlogReview,
+  updateBlogReviewReply
+} from './blogReview.controller';
+import { authMiddleware } from '../../middlewares/auth';
+import { checkReviewOwnership, checkReplyOwnership } from './blogReview.middleware';
 
 const router = Router();
 
-router.get("/blog-reviews", getAllBlogReviews);
-router.get("/blog-reviews/:id", getBlogReviewById);
-router.get("/blog-reviews/blog/:blogId", getAllBlogReviews);
-router.post("/blog-reviews", authMiddleware, createBlogReview);
-router.put("/blog-reviews/:id", authMiddleware, checkReviewOwnership, updateBlogReview);
-router.delete("/blog-reviews/:id", authMiddleware, checkReviewOwnership, deleteBlogReview);
+router.get('/blog-review/:blogId', getBlogReviewsByBlogId);
+router.get('/blog-review/review/:reviewId', getBlogReviewById);
+router.post('/blog-review', authMiddleware, createBlogReview);
+router.put('/blog-review/:reviewId', authMiddleware, checkReviewOwnership, updateBlogReview);
+router.delete('/blog-review/:reviewId', authMiddleware, checkReviewOwnership, deleteBlogReview);
+router.post('/blog-review/:reviewId/reply', authMiddleware, replyToBlogReview);
+router.put('/blog-review/:reviewId/reply', authMiddleware, checkReplyOwnership, updateBlogReviewReply);
 
 export default router;

@@ -17,6 +17,7 @@ datasource db {
 enum UserRole {
   USER
   ADMIN
+  SUPER_ADMIN
 }
 
 enum PaymentMethod {
@@ -72,10 +73,10 @@ model User {
   blogLikes     BlogLike[]     @relation("UserLikes")
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  otpCode        String?    // 6-digit code
-  otpExpiresAt   DateTime?  // Expiry for OTP
-  isVerified     Boolean    @default(false)
-  refreshToken   String?    // For refresh token storage (optional, for logout)
+  otpCode       String? // 6-digit code
+  otpExpiresAt  DateTime? // Expiry for OTP
+  isVerified    Boolean        @default(false)
+  refreshToken  String? // For refresh token storage (optional, for logout)
 
   @@index([email])
   @@map("users")
