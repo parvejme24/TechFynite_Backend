@@ -23,3 +23,19 @@ export function authMiddleware(
     return res.status(401).json({ error: "Invalid or expired token" });
   }
 }
+
+export function restrictBlogModification(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  return res.status(403).json({ error: 'Not allowed' });
+}
+
+export function adminOnly(req: Request, res: Response, next: NextFunction) {
+  const user = (req as any).user;
+  if (!user || user.role !== 'ADMIN') {
+    return res.status(403).json({ error: 'Admins only' });
+  }
+  next();
+}

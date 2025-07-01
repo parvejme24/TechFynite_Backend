@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { BlogReviewService } from './blogReview.service';
+import { BlogReviewModel } from './blogReview.model';
 
 export const getAllBlogReviews = async (req: Request, res: Response) => {
   try {
@@ -45,4 +46,10 @@ export const deleteBlogReview = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete blog review' });
   }
+};
+
+export const getBlogReviewsByBlogId = async (req: Request, res: Response) => {
+  const { blogId } = req.params;
+  const reviews = await BlogReviewModel.findByBlogId(blogId);
+  res.json(reviews);
 }; 

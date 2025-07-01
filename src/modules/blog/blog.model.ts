@@ -4,10 +4,51 @@ const prisma = new PrismaClient();
 
 export const BlogModel = {
   findAll: async (): Promise<Blog[]> => {
-    return prisma.blog.findMany({ include: { category: true, author: true, reviews: true } });
+    return prisma.blog.findMany({
+      include: {
+        category: {
+          select: {
+            id: true,
+            title: true,
+            imageUrl: true,
+            slug: true,
+            blogCount: true,
+          },
+        },
+        reviews: true,
+        author: {
+          select: {
+            id: true,
+            displayName: true,
+            photoUrl: true,
+          },
+        },
+      },
+    });
   },
   findById: async (id: string): Promise<Blog | null> => {
-    return prisma.blog.findUnique({ where: { id }, include: { category: true, author: true, reviews: true } });
+    return prisma.blog.findUnique({
+      where: { id },
+      include: {
+        category: {
+          select: {
+            id: true,
+            title: true,
+            imageUrl: true,
+            slug: true,
+            blogCount: true,
+          },
+        },
+        reviews: true,
+        author: {
+          select: {
+            id: true,
+            displayName: true,
+            photoUrl: true,
+          },
+        },
+      },
+    });
   },
   create: async (data: any): Promise<Blog> => {
     return prisma.blog.create({ data });

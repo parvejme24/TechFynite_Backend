@@ -18,4 +18,7 @@ export const BlogReviewModel = {
   delete: async (id: string): Promise<BlogReview> => {
     return prisma.blogReview.delete({ where: { id } });
   },
+  findByBlogId: async (blogId: string): Promise<BlogReview[]> => {
+    return prisma.blogReview.findMany({ where: { blogId } });
+  },
 }; 
