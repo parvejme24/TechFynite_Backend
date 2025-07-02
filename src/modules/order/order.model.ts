@@ -18,4 +18,7 @@ export const OrderModel = {
   delete: async (id: string): Promise<OrderInvoice> => {
     return prisma.orderInvoice.delete({ where: { id } });
   },
+  findByUserId: async (userId: string): Promise<OrderInvoice[]> => {
+    return prisma.orderInvoice.findMany({ where: { userId } });
+  },
 }; 

@@ -55,3 +55,12 @@ export function superAdminOnly(
   }
   next();
 }
+
+export function ownerOnly(req: Request, res: Response, next: NextFunction) {
+  const userIdFromToken = (req as any).userId;
+  const userIdFromParams = req.params.userId;
+  if (!userIdFromToken || userIdFromToken !== userIdFromParams) {
+    return res.status(403).json({ error: 'Access denied: not the owner' });
+  }
+  next();
+}

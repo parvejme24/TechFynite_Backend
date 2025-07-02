@@ -64,4 +64,29 @@ export const OrderService = {
   getById: (id: string) => OrderModel.findById(id),
   getAll: () => OrderModel.findAll(),
   delete: (id: string) => OrderModel.delete(id),
+  getAllByUserId: (userId: string) => OrderModel.findByUserId(userId),
+  createFromPayment: async (webhookData: any) => {
+    // Map FastSpring webhook data to your order fields
+    const orderData = {
+      userId: webhookData.data.userId, // You may need to map this properly
+      templateId: webhookData.data.templateId,
+      templateName: webhookData.data.productName,
+      templateThumbnail: webhookData.data.productThumbnail,
+      templatePrice: webhookData.data.productPrice,
+      totalPrice: webhookData.data.totalPrice,
+      paymentMethod: webhookData.data.paymentMethod,
+      paymentStatus: 'COMPLETED',
+      transactionId: webhookData.data.transactionId,
+      status: 'CONFIRMED',
+      isDelivered: false,
+      deliveryMethod: webhookData.data.deliveryMethod,
+      deliveryUrl: webhookData.data.deliveryUrl,
+      invoiceNumber: webhookData.data.invoiceNumber,
+      invoiceDate: new Date(webhookData.data.invoiceDate),
+      userEmail: webhookData.data.userEmail,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    return await OrderModel.create(orderData);
+  },
 }; 

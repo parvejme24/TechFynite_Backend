@@ -11,6 +11,8 @@ import { blogCategoryRoutes } from "./modules/blogCategory";
 import { blogRoutes } from "./modules/blog";
 import { orderRoutes } from "./modules/order";
 import { blogReviewRoutes } from "./modules/blogReview";
+import { paymentRoutes } from "./modules/payment";
+import { notificationRoutes } from "./modules/notification";
 
 const app: Application = express();
 
@@ -50,6 +52,8 @@ app.use("/api/v1", blogCategoryRoutes);
 app.use("/api/v1", blogRoutes);
 app.use("/api/v1", blogReviewRoutes);
 app.use("/api/v1", orderRoutes);
+app.use("/api/v1", paymentRoutes);
+app.use("/api/v1", notificationRoutes);
 
 // error handling middleware
 app.use((err: any, req: any, res: any, next: any) => {
