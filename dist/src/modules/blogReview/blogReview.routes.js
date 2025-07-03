@@ -1,0 +1,15 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const blogReview_controller_1 = require("./blogReview.controller");
+const auth_1 = require("../../middlewares/auth");
+const blogReview_middleware_1 = require("./blogReview.middleware");
+const router = (0, express_1.Router)();
+router.get('/blog-review/:blogId', blogReview_controller_1.getBlogReviewsByBlogId);
+router.get('/blog-review/review/:reviewId', blogReview_controller_1.getBlogReviewById);
+router.post('/blog-review', auth_1.authMiddleware, blogReview_controller_1.createBlogReview);
+router.put('/blog-review/:reviewId', auth_1.authMiddleware, blogReview_middleware_1.checkReviewOwnership, blogReview_controller_1.updateBlogReview);
+router.delete('/blog-review/:reviewId', auth_1.authMiddleware, blogReview_middleware_1.checkReviewOwnership, blogReview_controller_1.deleteBlogReview);
+router.post('/blog-review/:reviewId/reply', auth_1.authMiddleware, blogReview_controller_1.replyToBlogReview);
+router.put('/blog-review/:reviewId/reply', auth_1.authMiddleware, blogReview_middleware_1.checkReplyOwnership, blogReview_controller_1.updateBlogReviewReply);
+exports.default = router;
