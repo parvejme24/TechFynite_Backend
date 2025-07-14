@@ -67,4 +67,15 @@ export const logout = async (req: Request, res: Response) => {
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
+};
+
+export const getCurrentUser = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.userId;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    const user = await AuthService.getCurrentUser(userId);
+    res.json({ user });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 }; 

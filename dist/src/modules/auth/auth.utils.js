@@ -32,15 +32,6 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendEmail = exports.generateOtp = exports.verifyRefreshToken = exports.signRefreshToken = exports.verifyJwt = exports.signJwt = void 0;
 const jwt = __importStar(require("jsonwebtoken"));
@@ -58,7 +49,7 @@ const verifyJwt = (token) => {
     try {
         return jwt.verify(token, JWT_SECRET);
     }
-    catch (_a) {
+    catch {
         return null;
     }
 };
@@ -73,7 +64,7 @@ const verifyRefreshToken = (token) => {
     try {
         return jwt.verify(token, REFRESH_TOKEN_SECRET);
     }
-    catch (_a) {
+    catch {
         return null;
     }
 };
@@ -82,7 +73,7 @@ const generateOtp = () => {
     return crypto.randomInt(100000, 999999).toString();
 };
 exports.generateOtp = generateOtp;
-const sendEmail = (to, subject, text) => __awaiter(void 0, void 0, void 0, function* () {
+const sendEmail = async (to, subject, text) => {
     const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: Number(process.env.SMTP_PORT) || 587,
@@ -91,11 +82,11 @@ const sendEmail = (to, subject, text) => __awaiter(void 0, void 0, void 0, funct
             pass: process.env.SMTP_PASS,
         },
     });
-    yield transporter.sendMail({
+    await transporter.sendMail({
         from: process.env.SMTP_USER,
         to,
         subject,
         text,
     });
-});
+};
 exports.sendEmail = sendEmail;

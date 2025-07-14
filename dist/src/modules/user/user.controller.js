@@ -1,47 +1,36 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateUserRole = exports.updateUser = exports.getUserById = exports.getAllUsers = void 0;
 const user_service_1 = require("./user.service");
-const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+const getAllUsers = async (req, res) => {
     try {
-        if (((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) !== 'ADMIN')
+        if (req.user?.role !== 'ADMIN')
             return res.status(403).json({ error: 'Forbidden' });
-        const users = yield user_service_1.UserService.getAll();
+        const users = await user_service_1.UserService.getAll();
         res.json(users);
     }
-    catch (_b) {
+    catch {
         res.status(500).json({ error: 'Failed to fetch users' });
     }
-});
+};
 exports.getAllUsers = getAllUsers;
-const getUserById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getUserById = async (req, res) => {
     try {
         const userId = req.params.id;
-        const user = yield user_service_1.UserService.getById(userId);
+        const user = await user_service_1.UserService.getById(userId);
         if (!user)
             return res.status(404).json({ error: 'User not found' });
         res.json(user);
     }
-    catch (_a) {
+    catch {
         res.status(500).json({ error: 'Failed to fetch user' });
     }
-});
+};
 exports.getUserById = getUserById;
-const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+const updateUser = async (req, res) => {
     try {
         const userId = req.params.id;
-        const userInDb = yield user_service_1.UserService.getById(userId);
+        const userInDb = await user_service_1.UserService.getById(userId);
         if (!userInDb)
             return res.status(404).json({ error: 'User not found' });
         // If email is present in request, check it matches DB
@@ -53,7 +42,7 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             return res.status(400).json({ error: 'Password does not match your current password.' });
         }
         // Prevent normal users from changing their role
-        const userRole = (_a = req.user) === null || _a === void 0 ? void 0 : _a.role;
+        const userRole = req.user?.role;
         if ('role' in req.body &&
             req.body.role !== userInDb.role &&
             userRole !== 'ADMIN' &&
@@ -68,26 +57,25 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             delete req.body.email;
         if ('password' in req.body)
             delete req.body.password;
-        const user = yield user_service_1.UserService.update(userId, req.body);
+        const user = await user_service_1.UserService.update(userId, req.body);
         res.json(user);
     }
-    catch (_b) {
+    catch {
         res.status(500).json({ error: 'Failed to update user' });
     }
-});
+};
 exports.updateUser = updateUser;
-const updateUserRole = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+const updateUserRole = async (req, res) => {
     try {
-        const currentUserRole = (_a = req.user) === null || _a === void 0 ? void 0 : _a.role;
+        const currentUserRole = req.user?.role;
         if (!currentUserRole)
             return res.status(403).json({ error: 'Forbidden' });
-        const targetUser = yield user_service_1.UserService.getById(req.params.id);
+        const targetUser = await user_service_1.UserService.getById(req.params.id);
         if (!targetUser)
             return res.status(404).json({ error: 'User not found' });
         // SUPER_ADMIN can change anyone's role
         if (currentUserRole === 'SUPER_ADMIN') {
-            const user = yield user_service_1.UserService.updateRole(req.params.id, req.body);
+            const user = await user_service_1.UserService.updateRole(req.params.id, req.body);
             return res.json(user);
         }
         // ADMIN can only change USER's role
@@ -95,14 +83,14 @@ const updateUserRole = (req, res) => __awaiter(void 0, void 0, void 0, function*
             if (targetUser.role !== 'USER') {
                 return res.status(403).json({ error: 'Admin can only change USER roles.' });
             }
-            const user = yield user_service_1.UserService.updateRole(req.params.id, req.body);
+            const user = await user_service_1.UserService.updateRole(req.params.id, req.body);
             return res.json(user);
         }
         // Others cannot change roles
         return res.status(403).json({ error: 'Forbidden' });
     }
-    catch (_b) {
+    catch {
         res.status(500).json({ error: 'Failed to update user role' });
     }
-});
+};
 exports.updateUserRole = updateUserRole;

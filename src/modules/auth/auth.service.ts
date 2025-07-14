@@ -19,7 +19,11 @@ export const AuthService = {
       otpExpiresAt,
       isVerified: false,
     } as any);
-    await sendEmail(data.email, 'Verify your email', `Your verification code is: ${otp}`);
+    await sendEmail(
+      data.email,
+      'Verify your email',
+      `Your verification code is: ${otp}\n\nVerify here:\nhttp://localhost:3000/otp\nhttps://tf-f-ts.vercel.app/otp`
+    );
     return { message: 'Registration successful, please verify your email.' };
   },
 
@@ -62,7 +66,11 @@ export const AuthService = {
     const otp = generateOtp();
     const otpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
     await AuthModel.update(user.id, { otpCode: otp, otpExpiresAt });
-    await sendEmail(email, 'Reset your password', `Your password reset code is: ${otp}`);
+    await sendEmail(
+      email,
+      'Reset your password',
+      `Your password reset code is: ${otp}\n\nReset here:\nhttp://localhost:3000/otp\nhttps://tf-f-ts.vercel.app/otp`
+    );
     return { message: 'Password reset code sent to email.' };
   },
 
@@ -79,5 +87,11 @@ export const AuthService = {
   logout: async (userId: string) => {
     await AuthModel.update(userId, { refreshToken: null });
     return { message: 'Logged out successfully' };
+  },
+
+  getCurrentUser: async (userId: string) => {
+    const user = await AuthModel.findById(userId);
+    if (!user) throw new Error('User not found');
+    return user;
   },
 }; 

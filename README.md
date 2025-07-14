@@ -57,16 +57,118 @@ The server will start on the port specified in your `.env` file (default: 5000).
 
 ## Project Structure
 ```
-style-zone-server/
-├── prisma/              # Prisma schema and migrations
+tf_b_ts/
+├── API_DOCS.md
+├── docs/
+│   ├── auth.md
+│   ├── blog-category.md
+│   ├── blog.md
+│   ├── chat.md
+│   ├── discount.md
+│   ├── newsletter.md
+│   ├── notification.md
+│   ├── order.md
+│   ├── product.md
+│   ├── review.md
+│   ├── sizeGuide.md
+│   └── user.md
+├── generated/
+├── nodemon.json
+├── package.json
+├── prisma/
+│   ├── migrations/
+│   │   ├── 20250628214131_add_all_model/
+│   │   │   └── migration.sql
+│   │   ├── 20250630083812_add_otp_and_verification_to_user/
+│   │   │   └── migration.sql
+│   │   ├── 20250701201121_add_sper_admin_user_role/
+│   │   │   └── migration.sql
+│   │   └── migration_lock.toml
+│   └── schema.prisma
+├── property.ts
+├── README.md
 ├── src/
-│   ├── config/          # Configuration files (e.g., database)
-│   ├── app.ts           # Express app setup
-│   └── server.ts        # Server entry point
-├── .env                 # Environment variables
-├── package.json         # NPM scripts and dependencies
-├── nodemon.json         # Nodemon config
-└── README.md            # Project documentation
+│   ├── app.ts
+│   ├── config/
+│   │   └── database.ts
+│   ├── generated/
+│   ├── middlewares/
+│   │   └── auth.ts
+│   ├── modules/
+│   │   ├── auth/
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── auth.model.ts
+│   │   │   ├── auth.routes.ts
+│   │   │   ├── auth.service.ts
+│   │   │   ├── auth.types.ts
+│   │   │   ├── auth.utils.ts
+│   │   │   └── index.ts
+│   │   ├── blog/
+│   │   │   ├── blog.controller.ts
+│   │   │   ├── blog.model.ts
+│   │   │   ├── blog.routes.ts
+│   │   │   ├── blog.service.ts
+│   │   │   ├── blog.types.ts
+│   │   │   └── index.ts
+│   │   ├── blogCategory/
+│   │   │   ├── blogCategory.controller.ts
+│   │   │   ├── blogCategory.model.ts
+│   │   │   ├── blogCategory.routes.ts
+│   │   │   ├── blogCategory.service.ts
+│   │   │   ├── blogCategory.types.ts
+│   │   │   └── index.ts
+│   │   ├── blogReview/
+│   │   │   ├── blogReview.controller.ts
+│   │   │   ├── blogReview.middleware.ts
+│   │   │   ├── blogReview.model.ts
+│   │   │   ├── blogReview.routes.ts
+│   │   │   ├── blogReview.service.ts
+│   │   │   ├── blogReview.types.ts
+│   │   │   └── index.ts
+│   │   ├── notification/
+│   │   │   ├── index.ts
+│   │   │   ├── notification.controller.ts
+│   │   │   ├── notification.model.ts
+│   │   │   ├── notification.routes.ts
+│   │   │   ├── notification.service.ts
+│   │   │   └── notification.types.ts
+│   │   ├── order/
+│   │   │   ├── index.ts
+│   │   │   ├── order.controller.ts
+│   │   │   ├── order.model.ts
+│   │   │   ├── order.routes.ts
+│   │   │   ├── order.service.ts
+│   │   │   └── order.types.ts
+│   │   ├── payment/
+│   │   │   ├── fastspring.webhook.ts
+│   │   │   ├── index.ts
+│   │   │   ├── payment.controller.ts
+│   │   │   ├── payment.routes.ts
+│   │   │   └── payment.service.ts
+│   │   ├── template/
+│   │   │   ├── index.ts
+│   │   │   ├── template.controller.ts
+│   │   │   ├── template.model.ts
+│   │   │   ├── template.routes.ts
+│   │   │   ├── template.service.ts
+│   │   │   └── template.types.ts
+│   │   ├── templateCategory/
+│   │   │   ├── index.ts
+│   │   │   ├── templateCategory.controller.ts
+│   │   │   ├── templateCategory.model.ts
+│   │   │   ├── templateCategory.routes.ts
+│   │   │   ├── templateCategory.service.ts
+│   │   │   └── templateCategory.types.ts
+│   │   ├── user/
+│   │   │   ├── index.ts
+│   │   │   ├── user.controller.ts
+│   │   │   ├── user.model.ts
+│   │   │   ├── user.routes.ts
+│   │   │   ├── user.service.ts
+│   │   │   └── user.types.ts
+│   └── server.ts
+├── tsconfig.json
+└── uploads/
 ```
 
 ## Repository

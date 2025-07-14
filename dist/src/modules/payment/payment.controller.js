@@ -1,33 +1,24 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.fastspringWebhook = exports.checkout = void 0;
 const payment_service_1 = require("./payment.service");
-const checkout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const checkout = async (req, res) => {
     try {
-        const session = (yield payment_service_1.PaymentService.createFastSpringSession(req.body));
+        const session = (await payment_service_1.PaymentService.createFastSpringSession(req.body));
         res.json({ url: session.url });
     }
     catch (error) {
         res.status(500).json({ error: "Failed to initiate payment" });
     }
-});
+};
 exports.checkout = checkout;
-const fastspringWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const fastspringWebhook = async (req, res) => {
     try {
-        yield payment_service_1.PaymentService.handleFastSpringWebhook(req.body);
+        await payment_service_1.PaymentService.handleFastSpringWebhook(req.body);
         res.status(200).send("OK");
     }
     catch (error) {
         res.status(500).json({ error: "Webhook processing failed" });
     }
-});
+};
 exports.fastspringWebhook = fastspringWebhook;
