@@ -1,6 +1,6 @@
 import { AuthModel } from './auth.model';
 import { RegisterRequest, LoginRequest, VerifyOtpRequest, ResetPasswordRequest, JwtPayload } from './auth.types';
-import { signJwt, signRefreshToken, verifyRefreshToken, generateOtp, sendEmail } from './auth.utils';
+import { signJwt, signRefreshToken, verifyRefreshToken, generateOtp, sendEmail, sendOtpEmail } from './auth.utils';
 import bcrypt from 'bcryptjs';
 
 const OTP_EXPIRY_MINUTES = Number(process.env.OTP_EXPIRY_MINUTES) || 10;
@@ -19,11 +19,7 @@ export const AuthService = {
       otpExpiresAt,
       isVerified: false,
     } as any);
-    await sendEmail(
-      data.email,
-      'Verify your email',
-      `Your verification code is: ${otp}\n\nVerify here:\nhttp://localhost:3000/otp\nhttps://tf-f-ts.vercel.app/otp`
-    );
+    // await sendOtpEmail(data.email, otp); // OTP email sending is temporarily disabled
     return { message: 'Registration successful, please verify your email.' };
   },
 
