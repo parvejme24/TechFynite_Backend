@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
-import { AuthService } from './auth.service';
+import { Request, Response } from "express";
+import { AuthService } from "./auth.service";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -61,7 +61,7 @@ export const logout = async (req: Request, res: Response) => {
   try {
     // Assume userId is available in req.user (set by auth middleware)
     const userId = (req as any).user?.userId;
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
     const result = await AuthService.logout(userId);
     res.json(result);
   } catch (error: any) {
@@ -72,10 +72,10 @@ export const logout = async (req: Request, res: Response) => {
 export const getCurrentUser = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId;
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
     const user = await AuthService.getCurrentUser(userId);
     res.json({ user });
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
-}; 
+};

@@ -13,12 +13,19 @@ import { orderRoutes } from "./modules/order";
 import { blogReviewRoutes } from "./modules/blogReview";
 import { paymentRoutes } from "./modules/payment";
 import { notificationRoutes } from "./modules/notification";
+import { contactRoutes } from "./modules/contact";
+import { newsletterRoutes } from "./modules/newsletter";
 
 const app: Application = express();
 
 // security middleware
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:3000", "https://tf-f-ts.vercel.app"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
@@ -54,6 +61,8 @@ app.use("/api/v1", blogReviewRoutes);
 app.use("/api/v1", orderRoutes);
 app.use("/api/v1", paymentRoutes);
 app.use("/api/v1", notificationRoutes);
+app.use("/api/v1", contactRoutes);
+app.use("/api/v1", newsletterRoutes);
 
 // error handling middleware
 app.use((err: any, req: any, res: any, next: any) => {

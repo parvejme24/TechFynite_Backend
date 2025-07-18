@@ -225,3 +225,24 @@ model Notification {
   @@index([userId])
   @@map("notifications")
 }
+
+model Contact {
+  id             String   @id @default(uuid())
+  projectDetails String
+  budget         String
+  fullName       String
+  email          String
+  companyName    String
+  serviceRequred String
+  createdAt      DateTime @default(now())
+
+  @@map("contacts")
+}
+
+model Newsletter {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("newsletters")
+}
