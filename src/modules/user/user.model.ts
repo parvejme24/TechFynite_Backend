@@ -1,18 +1,111 @@
-import { PrismaClient, User } from '../../generated/prisma';
-
-const prisma = new PrismaClient();
+import { prisma } from '../../config/database';
+import { UserRole } from '../../generated/prisma';
+import { UpdateUserRequest, UpdateUserRoleRequest } from './user.types';
 
 export const UserModel = {
-  findAll: async (): Promise<User[]> => {
-    return prisma.user.findMany();
+  getAll: async () => {
+    return prisma.user.findMany({
+      select: {
+        id: true,
+        displayName: true,
+        email: true,
+        photoUrl: true,
+        designation: true,
+        role: true,
+        phone: true,
+        country: true,
+        city: true,
+        stateOrRegion: true,
+        postCode: true,
+        balance: true,
+        isVerified: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
   },
-  findById: async (id: string): Promise<User | null> => {
-    return prisma.user.findUnique({ where: { id } });
+
+  getById: async (id: string) => {
+    return prisma.user.findUnique({ 
+      where: { id },
+      select: {
+        id: true,
+        displayName: true,
+        email: true,
+        photoUrl: true,
+        designation: true,
+        role: true,
+        phone: true,
+        country: true,
+        city: true,
+        stateOrRegion: true,
+        postCode: true,
+        balance: true,
+        isVerified: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
   },
-  update: async (id: string, data: any): Promise<User> => {
-    return prisma.user.update({ where: { id }, data });
+
+  update: async (id: string, data: UpdateUserRequest) => {
+    return prisma.user.update({ 
+      where: { id }, 
+      data,
+      select: {
+        id: true,
+        displayName: true,
+        email: true,
+        photoUrl: true,
+        designation: true,
+        role: true,
+        phone: true,
+        country: true,
+        city: true,
+        stateOrRegion: true,
+        postCode: true,
+        balance: true,
+        isVerified: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
   },
-  updateRole: async (id: string, role: 'USER' | 'ADMIN'): Promise<User> => {
-    return prisma.user.update({ where: { id }, data: { role } });
+
+  updateRole: async (id: string, role: string) => {
+    // Validate role enum
+    if (!Object.values(UserRole).includes(role as UserRole)) {
+      throw new Error('Invalid role value');
+    }
+
+    return prisma.user.update({ 
+      where: { id }, 
+      data: { role: role as UserRole },
+      select: {
+        id: true,
+        displayName: true,
+        email: true,
+        photoUrl: true,
+        designation: true,
+        role: true,
+        phone: true,
+        country: true,
+        city: true,
+        stateOrRegion: true,
+        postCode: true,
+        balance: true,
+        isVerified: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
   },
-}; 
+
+  getUserRole: async (id: string) => {
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { role: true }
+    });
+    return user?.role;
+  },
+};

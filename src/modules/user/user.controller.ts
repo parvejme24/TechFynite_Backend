@@ -1,106 +1,189 @@
-import { Request, Response } from "express";
-import { UserService } from "./user.service";
+import { Request, Response } from 'express';
+import { UserService } from './user.service';
+import { UserRole } from '../../generated/prisma';
+import { UpdateUserRequest } from './user.types';
+
+const ALLOWED_PROFILE_FIELDS = [
+  'displayName',
+  'phone',
+  'country',
+  'city',
+  'stateOrRegion',
+  'postCode',
+  'designation',
+];
 
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
-    if ((req as any).user?.role !== "ADMIN")
-      return res.status(403).json({ error: "Forbidden" });
     const users = await UserService.getAll();
-    res.json(users);
-  } catch {
-    res.status(500).json({ error: "Failed to fetch users" });
+    res.json({
+      success: true,
+      data: users,
+      message: 'Users fetched successfully'
+    });
+  } catch (error) {
+    console.error('Get all users error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch users',
+      details: error instanceof Error ? error.message : error 
+    });
   }
 };
 
 export const getUserById = async (req: Request, res: Response) => {
   try {
-    const userId = req.params.id;
-    const user = await UserService.getById(userId);
-    if (!user) return res.status(404).json({ error: "User not found" });
-    res.json(user);
-  } catch {
-    res.status(500).json({ error: "Failed to fetch user" });
+    const user = await UserService.getById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'User not found' 
+      });
+    }
+    res.json({
+      success: true,
+      data: user,
+      message: 'User fetched successfully'
+    });
+  } catch (error) {
+    console.error('Get user by ID error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch user',
+      details: error instanceof Error ? error.message : error 
+    });
   }
 };
 
 export const updateUser = async (req: Request, res: Response) => {
   try {
-    const userId = req.params.id;
-    const userInDb = await UserService.getById(userId);
-    if (!userInDb) return res.status(404).json({ error: "User not found" });
+    let photoUrl = req.file ? `/uploads/${req.file.filename}` : req.body.photoUrl;
+    
+    // Only allow updating allowed fields (email is not allowed)
+    const updateData: UpdateUserRequest = { photoUrl };
+    for (const field of ALLOWED_PROFILE_FIELDS) {
+      if (req.body[field] !== undefined) {
+        updateData[field as keyof UpdateUserRequest] = req.body[field];
+      }
+    }
 
-    // If email is present in request, check it matches DB
-    if ("email" in req.body && req.body.email !== userInDb.email) {
-      return res
-        .status(400)
-        .json({ error: "Email does not match your current email." });
-    }
-    // If password is present in request, check it matches DB
-    if ("password" in req.body && req.body.password !== userInDb.password) {
-      return res
-        .status(400)
-        .json({ error: "Password does not match your current password." });
-    }
-    // Prevent normal users from changing their role
-    const userRole = (req as any).user?.role;
-    if (
-      "role" in req.body &&
-      req.body.role !== userInDb.role &&
-      userRole !== "ADMIN" &&
-      userRole !== "SUPER_ADMIN"
-    ) {
-      return res
-        .status(400)
-        .json({ error: "You are not allowed to change your role." });
-    }
-    if (
-      userRole !== "ADMIN" &&
-      userRole !== "SUPER_ADMIN" &&
-      "role" in req.body
-    ) {
-      delete req.body.role;
-    }
-    // Remove email and password from update payload
-    if ("email" in req.body) delete req.body.email;
-    if ("password" in req.body) delete req.body.password;
-
-    const user = await UserService.update(userId, req.body);
-    res.json(user);
-  } catch {
-    res.status(500).json({ error: "Failed to update user" });
+    const user = await UserService.update(req.params.id, updateData);
+    res.json({
+      success: true,
+      data: user,
+      message: 'User updated successfully'
+    });
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to update user', 
+      details: error instanceof Error ? error.message : error 
+    });
   }
 };
 
 export const updateUserRole = async (req: Request, res: Response) => {
   try {
-    const currentUser = (req as any).user;
-    const currentUserRole = currentUser?.role;
-    if (!currentUserRole) {
-      return res.status(403).json({ error: "Forbidden: No current user role found." });
+    // Debug logging
+    console.log('=== ROLE UPDATE DEBUG ===');
+    console.log('Request headers:', req.headers);
+    console.log('Request body:', req.body);
+    console.log('Request method:', req.method);
+    console.log('Content-Type:', req.headers['content-type']);
+    console.log('Body type:', typeof req.body);
+    console.log('Body keys:', req.body ? Object.keys(req.body) : 'No body');
+    console.log('Raw body:', req.body);
+    console.log('========================');
+
+    // Handle different content types
+    let roleValue = null;
+    
+    // Check if body exists and has content
+    if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
+      roleValue = req.body.role;
+    } else if (req.body && typeof req.body === 'string') {
+      // Handle raw string body
+      try {
+        const parsed = JSON.parse(req.body);
+        roleValue = parsed.role;
+      } catch (e) {
+        console.log('Failed to parse string body as JSON');
+      }
     }
 
-    if (currentUserRole === "USER") {
-      return res.status(403).json({ error: "User role cannot change any roles." });
+    console.log('Extracted role value:', roleValue);
+
+    // Validate request body
+    if (!req.body || (typeof req.body === 'object' && Object.keys(req.body).length === 0)) {
+      console.log('Body validation failed - req.body is empty or missing');
+      return res.status(400).json({ 
+        success: false,
+        error: 'Request body is required. Please send: {"role": "ADMIN"}' 
+      });
     }
 
-    // Only ADMIN or SUPER_ADMIN can change roles
-    const targetUser = await UserService.getById(req.params.id);
-    if (!targetUser) {
-      return res.status(404).json({ error: "User not found." });
+    if (!roleValue) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Role is required in request body. Example: {"role": "ADMIN"}' 
+      });
     }
 
-    // Prevent changing own role (optional, can be removed if not needed)
-    if (currentUser.id === targetUser.id) {
-      return res.status(403).json({ error: "You cannot change your own role." });
+    // Validate role enum
+    if (!Object.values(UserRole).includes(roleValue)) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Invalid role value. Must be one of: USER, ADMIN, SUPER_ADMIN' 
+      });
     }
 
-    // ADMIN and SUPER_ADMIN can change any role
-    const user = await UserService.updateRole(req.params.id, req.body);
-    return res.json(user);
-  } catch (err) {
-    res.status(500).json({
-      error: "Failed to update user role",
-      details: err instanceof Error ? err.message : err,
+    // Get logged-in user ID from auth middleware
+    const loggedInUserId = (req as any).user?.userId;
+    if (!loggedInUserId) {
+      return res.status(401).json({ 
+        success: false,
+        error: 'Authentication required' 
+      });
+    }
+
+    const targetUserId = req.params.id;
+    const updatedUser = await UserService.updateRole(loggedInUserId, targetUserId, roleValue);
+    
+    res.json({
+      success: true,
+      data: updatedUser,
+      message: 'User role updated successfully'
+    });
+  } catch (error) {
+    console.error('Update user role error:', error);
+    
+    // Handle specific authorization errors
+    if (error instanceof Error) {
+      if (error.message.includes('Insufficient permissions')) {
+        return res.status(403).json({ 
+          success: false,
+          error: error.message 
+        });
+      }
+      if (error.message.includes('not found')) {
+        return res.status(404).json({ 
+          success: false,
+          error: error.message 
+        });
+      }
+      if (error.message.includes('cannot update their own role')) {
+        return res.status(400).json({ 
+          success: false,
+          error: error.message 
+        });
+      }
+    }
+
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to update user role', 
+      details: error instanceof Error ? error.message : error 
     });
   }
 };

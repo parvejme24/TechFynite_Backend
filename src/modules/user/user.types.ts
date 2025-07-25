@@ -1,14 +1,32 @@
+export interface UpdateUserRoleRequest {
+  role: string;
+}
+
 export interface UpdateUserRequest {
   displayName?: string;
-  photoUrl?: string;
-  designation?: string;
   phone?: string;
   country?: string;
   city?: string;
   stateOrRegion?: string;
   postCode?: string;
+  designation?: string;
+  photoUrl?: string;
 }
 
-export interface UpdateUserRoleRequest {
-  role: 'USER' | 'ADMIN';
-} 
+export interface UserResponse {
+  id: string;
+  displayName: string;
+  email: string;
+  photoUrl?: string;
+  designation?: string;
+  role: string;
+  phone?: string;
+  country?: string;
+  city?: string;
+  stateOrRegion?: string;
+  postCode?: string;
+  balance: number;
+  isVerified: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
