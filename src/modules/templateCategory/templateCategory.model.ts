@@ -9,6 +9,7 @@ export const TemplateCategoryModel = {
   findById: async (id: string): Promise<TemplateCategory | null> => {
     return prisma.templateCategory.findUnique({ where: { id }, include: { templates: true } });
   },
+  // The create method allows adding a new category independently.
   create: async (data: any): Promise<TemplateCategory> => {
     return prisma.templateCategory.create({ data });
   },

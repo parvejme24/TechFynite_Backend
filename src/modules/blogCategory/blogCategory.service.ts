@@ -2,9 +2,19 @@ import { BlogCategoryModel } from './blogCategory.model';
 import { CreateBlogCategoryRequest, UpdateBlogCategoryRequest } from './blogCategory.types';
 
 export const BlogCategoryService = {
-  getAll: () => BlogCategoryModel.findAll(),
-  getById: (id: string) => BlogCategoryModel.findById(id),
-  create: (data: CreateBlogCategoryRequest) => BlogCategoryModel.create(data),
-  update: (id: string, data: UpdateBlogCategoryRequest) => BlogCategoryModel.update(id, data),
-  delete: (id: string) => BlogCategoryModel.delete(id),
-}; 
+  getAll: async () => {
+    return BlogCategoryModel.getAll();
+  },
+  getById: async (id: string) => {
+    return BlogCategoryModel.getById(id);
+  },
+  create: async (data: CreateBlogCategoryRequest) => {
+    return BlogCategoryModel.create(data);
+  },
+  update: async (id: string, data: UpdateBlogCategoryRequest) => {
+    return BlogCategoryModel.update(id, data);
+  },
+  delete: async (id: string) => {
+    return BlogCategoryModel.delete(id);
+  },
+};

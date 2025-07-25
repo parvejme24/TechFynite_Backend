@@ -15,8 +15,12 @@ import { paymentRoutes } from "./modules/payment";
 import { notificationRoutes } from "./modules/notification";
 import { contactRoutes } from "./modules/contact";
 import { newsletterRoutes } from "./modules/newsletter";
+import path from 'path';
 
 const app: Application = express();
+
+// Serve uploads directory statically
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // security middleware
 app.use(helmet());
@@ -31,11 +35,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
 // rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each ip to 100 requests per windowms
-});
-app.use(limiter);
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000,
+//   max: 100,
+// });
+// app.use(limiter);
 
 // home route
 app.get("/", (req: Request, res: Response) => {

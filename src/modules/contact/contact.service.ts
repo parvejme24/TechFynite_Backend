@@ -18,5 +18,60 @@ export const ContactService = {
     }
     return contact;
   },
-  getAll: (): ContactForm[] => ContactModel.getAll(),
+  /**
+   * Get all contacts with optional filtering, searching, sorting, and pagination
+   * @param options { keyword?: string, fromDate?: string, toDate?: string, serviceRequred?: string, page?: number, pageSize?: number }
+   * @returns { data: ContactForm[], total: number }
+   */
+  getAll: (options?: {
+    keyword?: string;
+    fromDate?: string;
+    toDate?: string;
+    serviceRequred?: string;
+    page?: number;
+    pageSize?: number;
+  }): { data: ContactForm[]; total: number } => {
+    let contacts = ContactModel.getAll();
+
+    // Filter by serviceRequred
+    if (options?.serviceRequred) {
+      contacts = contacts.filter(c => c.serviceRequred === options.serviceRequred);
+    }
+
+    // Filter by date range
+    if (options?.fromDate) {
+      const from = new Date(options.fromDate);
+      contacts = contacts.filter(c => new Date(c.createdAt) >= from);
+    }
+    if (options?.toDate) {
+      const to = new Date(options.toDate);
+      contacts = contacts.filter(c => new Date(c.createdAt) <= to);
+    }
+
+    // Keyword search (search in all string fields)
+    if (options?.keyword) {
+      const keyword = options.keyword.toLowerCase();
+      contacts = contacts.filter(c =>
+        c.projectDetails.toLowerCase().includes(keyword) ||
+        c.budget.toLowerCase().includes(keyword) ||
+        c.fullName.toLowerCase().includes(keyword) ||
+        c.email.toLowerCase().includes(keyword) ||
+        c.companyName.toLowerCase().includes(keyword) ||
+        c.serviceRequred.toLowerCase().includes(keyword)
+      );
+    }
+
+    // Sort by createdAt (recent to old)
+    contacts = contacts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    // Pagination
+    const page = options?.page && options.page > 0 ? options.page : 1;
+    const pageSize = options?.pageSize && options.pageSize > 0 ? options.pageSize : 9;
+    const total = contacts.length;
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    const data = contacts.slice(start, end);
+
+    return { data, total };
+  },
 }; 

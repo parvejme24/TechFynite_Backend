@@ -1,21 +1,20 @@
-import { PrismaClient, BlogCategory } from '../../generated/prisma';
-
-const prisma = new PrismaClient();
+import { prisma } from '../../config/database';
+import { CreateBlogCategoryRequest, UpdateBlogCategoryRequest } from './blogCategory.types';
 
 export const BlogCategoryModel = {
-  findAll: async (): Promise<BlogCategory[]> => {
-    return prisma.blogCategory.findMany({ include: { blogs: true } });
+  getAll: async () => {
+    return prisma.blogCategory.findMany();
   },
-  findById: async (id: string): Promise<BlogCategory | null> => {
-    return prisma.blogCategory.findUnique({ where: { id }, include: { blogs: true } });
+  getById: async (id: string) => {
+    return prisma.blogCategory.findUnique({ where: { id } });
   },
-  create: async (data: any): Promise<BlogCategory> => {
+  create: async (data: CreateBlogCategoryRequest) => {
     return prisma.blogCategory.create({ data });
   },
-  update: async (id: string, data: any): Promise<BlogCategory> => {
+  update: async (id: string, data: UpdateBlogCategoryRequest) => {
     return prisma.blogCategory.update({ where: { id }, data });
   },
-  delete: async (id: string): Promise<BlogCategory> => {
+  delete: async (id: string) => {
     return prisma.blogCategory.delete({ where: { id } });
   },
-}; 
+};
