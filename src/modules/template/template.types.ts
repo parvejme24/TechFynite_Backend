@@ -4,14 +4,14 @@ export interface CreateTemplateRequest {
   imageUrl?: string;
   categoryId: string;
   version: number;
-  publishedDate: Date;
+  publishedDate: string;
   downloads?: number;
   pages?: number;
   views?: number;
   totalPurchase?: number;
   previewLink?: string;
   shortDescription: string;
-  description: string;
+  description: string[];
   whatsIncluded: string[];
   keyFeatures: any[];
   screenshots: string[];
@@ -23,15 +23,15 @@ export interface UpdateTemplateRequest {
   imageUrl?: string;
   categoryId?: string;
   version?: number;
-  publishedDate?: Date;
+  publishedDate?: string;
   downloads?: number;
   pages?: number;
   views?: number;
   totalPurchase?: number;
   previewLink?: string;
   shortDescription?: string;
-  description?: string;
+  description?: string[];
   whatsIncluded?: string[];
   keyFeatures?: any[];
   screenshots?: string[];
-} 
+}
