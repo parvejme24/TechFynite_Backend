@@ -15,6 +15,7 @@ import { paymentRoutes } from "./modules/payment";
 import { notificationRoutes } from "./modules/notification";
 import { contactRoutes } from "./modules/contact";
 import { newsletterRoutes } from "./modules/newsletter";
+import { pricingRoutes } from "./modules/pricing";
 import path from 'path';
 
 const app: Application = express();
@@ -67,6 +68,7 @@ app.use("/api/v1", paymentRoutes);
 app.use("/api/v1", notificationRoutes);
 app.use("/api/v1", contactRoutes);
 app.use("/api/v1", newsletterRoutes);
+app.use("/api/v1", pricingRoutes);
 
 // error handling middleware
 app.use((err: any, req: any, res: any, next: any) => {

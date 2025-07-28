@@ -59,12 +59,12 @@ model Template {
   imageUrl         String?
   categoryId       String
   version          Float
-  publishedDate    DateTime
   downloads        Int              @default(0)
   pages            Int              @default(1)
   views            Int              @default(0)
   totalPurchase    Int              @default(0)
   previewLink      String?
+  // sourceFiles      String[]
   shortDescription String
   description      String[]
   whatsIncluded    String[]
@@ -94,21 +94,21 @@ model BlogCategory {
 }
 
 model Blog {
-  id          String       @id @default(uuid())
+  id          String        @id @default(uuid())
   title       String
   categoryId  String
   imageUrl    String?
   description String[]
-  likes       Int          @default(0)
+  likes       Int           @default(0)
   readingTime Float
   authorId    String
   content     BlogContent[] @relation("BlogContent")
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  blogLikes   BlogLike[]   @relation("BlogLikes")
-  reviews     BlogReview[] @relation("BlogReviews")
-  author      User         @relation("BlogAuthor", fields: [authorId], references: [id])
-  category    BlogCategory @relation("CategoryBlogs", fields: [categoryId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  blogLikes   BlogLike[]    @relation("BlogLikes")
+  reviews     BlogReview[]  @relation("BlogReviews")
+  author      User          @relation("BlogAuthor", fields: [authorId], references: [id])
+  category    BlogCategory  @relation("CategoryBlogs", fields: [categoryId], references: [id])
 
   @@map("blogs")
 }
@@ -211,6 +211,24 @@ model Newsletter {
   createdAt DateTime @default(now())
 
   @@map("newsletters")
+}
+
+model Pricing {
+  id          String   @id @default(cuid())
+  title       String
+  price       Int
+  license     String
+  recommended Boolean  @default(false)
+  duration    Duration
+  features    String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum Duration {
+  MONTHLY
+  YEARLY
+  HALFYEARLY
 }
 
 enum UserRole {
