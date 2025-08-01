@@ -1,57 +1,57 @@
 import { Request, Response } from 'express';
 import { OrderService } from './order.service';
 
-export const createOrder = async (req: Request, res: Response) => {
+export const getUserOrders = async (req: Request, res: Response) => {
   try {
-    const order = await OrderService.create(req.body);
-    res.status(201).json(order);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create order' });
-  }
-};
+    const userId = (req as any).user?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized - User not authenticated' });
+    }
 
-export const updateOrder = async (req: Request, res: Response) => {
-  try {
-    const order = await OrderService.update(req.params.id, req.body);
-    res.json(order);
+    const orders = await OrderService.getUserOrders(userId);
+    res.json(orders);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update order' });
+    console.error('Get user orders error:', error);
+    res.status(500).json({ error: 'Failed to fetch user orders' });
   }
 };
 
 export const getOrderById = async (req: Request, res: Response) => {
   try {
-    const order = await OrderService.getById(req.params.id);
-    if (!order) return res.status(404).json({ error: 'Order not found' });
+    const userId = (req as any).user?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized - User not authenticated' });
+    }
+
+    const order = await OrderService.getOrderById(req.params.id, userId);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
     res.json(order);
   } catch (error) {
+    console.error('Get order error:', error);
     res.status(500).json({ error: 'Failed to fetch order' });
   }
 };
 
-export const getAllOrders = async (req: Request, res: Response) => {
+export const getTemplateDownload = async (req: Request, res: Response) => {
   try {
-    const orders = await OrderService.getAll();
-    res.json(orders);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch orders' });
-  }
-};
+    const userId = (req as any).user?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized - User not authenticated' });
+    }
 
-export const deleteOrder = async (req: Request, res: Response) => {
-  try {
-    await OrderService.delete(req.params.id);
-    res.status(204).send();
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to delete order' });
-  }
-};
+    const { templateId } = req.params;
+    const downloadData = await OrderService.getTemplateDownload(templateId, userId);
+    
+    if (!downloadData) {
+      return res.status(404).json({ error: 'Template not found or not purchased' });
+    }
 
-export const getOrdersByUserId = async (req: Request, res: Response) => {
-  try {
-    const orders = await OrderService.getAllByUserId(req.params.userId);
-    res.json(orders);
+    res.json(downloadData);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch orders by user' });
+    console.error('Get template download error:', error);
+    res.status(500).json({ error: 'Failed to get template download' });
   }
 }; 

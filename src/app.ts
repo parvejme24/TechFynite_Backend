@@ -16,6 +16,9 @@ import { notificationRoutes } from "./modules/notification";
 import { contactRoutes } from "./modules/contact";
 import { newsletterRoutes } from "./modules/newsletter";
 import { pricingRoutes } from "./modules/pricing";
+import { checkoutRoutes } from "./modules/checkout";
+import { lemonsqueezyWebhookRoutes } from "./modules/webhook";
+import { licenseRoutes } from "./modules/license";
 import path from 'path';
 
 const app: Application = express();
@@ -27,7 +30,12 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use(helmet());
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://tf-f-ts.vercel.app"],
+    origin: [
+      "http://localhost:3000", 
+      "https://tf-f-ts.vercel.app",
+      "https://tf-b-ts.vercel.app",
+      "https://techfynite-backend.vercel.app"
+    ],
     credentials: true,
   })
 );
@@ -69,6 +77,9 @@ app.use("/api/v1", notificationRoutes);
 app.use("/api/v1", contactRoutes);
 app.use("/api/v1", newsletterRoutes);
 app.use("/api/v1", pricingRoutes);
+app.use("/api/v1", checkoutRoutes);
+app.use("/api/v1", lemonsqueezyWebhookRoutes);
+app.use("/api/v1", licenseRoutes);
 
 // error handling middleware
 app.use((err: any, req: any, res: any, next: any) => {

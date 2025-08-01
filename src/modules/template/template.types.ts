@@ -2,7 +2,7 @@ export interface CreateTemplateRequest {
   title: string;
   price: number;
   imageUrl?: string;
-  fileUrl?: string; // For zip file
+  sourceFiles?: string[]; // Array of downloadable file URLs
   categoryId: string;
   version: number;
   publishedDate: string;
@@ -16,13 +16,16 @@ export interface CreateTemplateRequest {
   whatsIncluded: string[];
   keyFeatures: any[];
   screenshots: string[];
+  lemonsqueezyProductId?: string;
+  lemonsqueezyVariantId?: string;
+  lemonsqueezyPermalink?: string;
 }
 
 export interface UpdateTemplateRequest {
   title?: string;
   price?: number;
   imageUrl?: string;
-  fileUrl?: string; // For zip file
+  sourceFiles?: string[]; // Array of downloadable file URLs
   categoryId?: string;
   version?: number;
   publishedDate?: string;
@@ -36,4 +39,7 @@ export interface UpdateTemplateRequest {
   whatsIncluded?: string[];
   keyFeatures?: any[];
   screenshots?: string[];
+  lemonsqueezyProductId?: string;
+  lemonsqueezyVariantId?: string;
+  lemonsqueezyPermalink?: string;
 }

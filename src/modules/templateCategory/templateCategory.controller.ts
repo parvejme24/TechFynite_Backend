@@ -46,7 +46,7 @@ export const updateTemplateCategory = async (req: Request, res: Response) => {
 export const deleteTemplateCategory = async (req: Request, res: Response) => {
   try {
     await TemplateCategoryService.delete(req.params.id);
-    res.status(204).send({ message: 'Template category deleted successfully' });
+    res.status(204).json({ message: 'Template category deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete template category' });
   }

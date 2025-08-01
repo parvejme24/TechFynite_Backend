@@ -88,6 +88,38 @@ export const uploadTemplateScreenshots = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB
 });
 
+// Combined template upload middleware
+export const uploadTemplateFiles = multer({
+  storage: createStorage('uploads'),
+  fileFilter: (req: any, file: any, cb: any) => {
+    const fileExtension = path.extname(file.originalname).toLowerCase();
+    
+    // Check field name to determine allowed file types
+    if (file.fieldname === 'image' || file.fieldname === 'screenshots') {
+      // Images allowed
+      if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(fileExtension)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed for image and screenshots fields'), false);
+      }
+    } else if (file.fieldname === 'templateFile') {
+      // ZIP files allowed
+      if (fileExtension === '.zip') {
+        cb(null, true);
+      } else {
+        cb(new Error('Only ZIP files are allowed for templateFile field'), false);
+      }
+    } else {
+      cb(new Error(`Unexpected field: ${file.fieldname}`), false);
+    }
+  },
+  limits: { fileSize: 100 * 1024 * 1024 } // 100MB
+}).fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'templateFile', maxCount: 1 },
+  { name: 'screenshots', maxCount: 10 }
+]);
+
 // User profile upload (images only)
 export const uploadUserProfile = multer({
   storage: createStorage('uploads/userProfile'),

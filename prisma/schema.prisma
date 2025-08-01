@@ -29,15 +29,16 @@ model User {
   otpExpiresAt  DateTime?
   refreshToken  String?
 
-  blogLikes      BlogLike[]         @relation("UserLikes")
-  blogs          Blog[]             @relation("BlogAuthor")
-  notifications  Notification[]     @relation("UserNotifications")
-  orders         OrderInvoice[]     @relation("UserOrders")
-  purchases      Template[]         @relation("UserPurchases")
-  reviews        BlogReview[]       @relation("UserReviews")
-  reviewReplies  BlogReviewReply[]  @relation("AdminReplies")
-  contacts       Contact[]          @relation("UserContacts")
-  contactReplies ContactReply[]     @relation("UserContactReplies")
+  blogLikes      BlogLike[]        @relation("UserLikes")
+  blogs          Blog[]            @relation("BlogAuthor")
+  notifications  Notification[]    @relation("UserNotifications")
+  orders         OrderInvoice[]    @relation("UserOrders")
+  purchases      Template[]        @relation("UserPurchases")
+  reviews        BlogReview[]      @relation("UserReviews")
+  reviewReplies  BlogReviewReply[] @relation("AdminReplies")
+  contacts       Contact[]         @relation("UserContacts")
+  contactReplies ContactReply[]    @relation("UserContactReplies")
+  licenses       License[]         @relation("UserLicenses")
 
   @@index([email])
   @@index([role])
@@ -59,28 +60,33 @@ model TemplateCategory {
 }
 
 model Template {
-  id               String           @id @default(uuid())
-  title            String
-  price            Float
-  imageUrl         String?
-  categoryId       String
-  version          Float
-  downloads        Int              @default(0)
-  pages            Int              @default(1)
-  views            Int              @default(0)
-  totalPurchase    Int              @default(0)
-  previewLink      String?
-  sourceFiles      String[]
-  shortDescription String
-  description      String[]
-  whatsIncluded    String[]
-  keyFeatures      Json[]
-  screenshots      String[]
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  orders           OrderInvoice[]   @relation("TemplateOrders")
-  category         TemplateCategory @relation("CategoryTemplates", fields: [categoryId], references: [id])
-  purchasedBy      User[]           @relation("UserPurchases")
+  id                    String   @id @default(uuid())
+  title                 String
+  slug                  String   @unique
+  price                 Float
+  lemonsqueezyProductId String? // LS product ID
+  lemonsqueezyVariantId String? // LS variant ID (Single license / Extended license)
+  lemonsqueezyPermalink String? // LS permalink (for license validation)
+  imageUrl              String?
+  screenshots           String[] // Preview screenshots
+  previewLink           String? // Live preview site
+  sourceFiles           String[] // Downloadable files (used in delivery)
+  shortDescription      String
+  description           String[] // Full details
+  whatsIncluded         String[]
+  keyFeatures           Json[] // Array of { title, description }
+  version               Float
+  pages                 Int      @default(1)
+  downloads             Int      @default(0)
+  totalPurchase         Int      @default(0)
+  categoryId            String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  category    TemplateCategory @relation("CategoryTemplates", fields: [categoryId], references: [id])
+  orders      OrderInvoice[]   @relation("TemplateOrders")
+  purchasedBy User[]           @relation("UserPurchases")
+  licenses    License[]        @relation("TemplateLicenses")
 
   @@index([categoryId])
   @@index([createdAt])
@@ -198,7 +204,8 @@ model BlogLike {
 
 model OrderInvoice {
   id                String         @id @default(uuid())
-  orderId           String         @unique
+  orderId           String         @unique // LemonSqueezy Order ID
+  licenseKey        String? // LemonSqueezy License
   userId            String
   templateId        String
   templateName      String
@@ -209,16 +216,17 @@ model OrderInvoice {
   paymentStatus     PaymentStatus  @default(PENDING)
   transactionId     String?
   status            OrderStatus    @default(PENDING)
-  isDelivered       Boolean        @default(false)
   deliveryMethod    DeliveryMethod
-  deliveryUrl       String?
+  deliveryUrl       String? // file URL / download link
   invoiceNumber     String         @unique
   invoiceDate       DateTime
   userEmail         String
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
-  template          Template       @relation("TemplateOrders", fields: [templateId], references: [id])
-  user              User           @relation("UserOrders", fields: [userId], references: [id])
+
+  template Template @relation("TemplateOrders", fields: [templateId], references: [id])
+  user     User     @relation("UserOrders", fields: [userId], references: [id])
+  license  License? @relation("OrderLicense")
 
   @@index([orderId, invoiceNumber])
   @@index([userId])
@@ -291,6 +299,30 @@ model ContactReply {
   @@index([contactId])
   @@index([userId])
   @@map("contact_replies")
+}
+
+model License {
+  id          String   @id @default(uuid())
+  licenseKey  String   @unique // LemonSqueezy License Key
+  templateId  String
+  userId      String
+  orderId     String   @unique // LemonSqueezy Order ID
+  isValid     Boolean  @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  template Template @relation("TemplateLicenses", fields: [templateId], references: [id], onDelete: Cascade)
+  user     User     @relation("UserLicenses", fields: [userId], references: [id], onDelete: Cascade)
+  order    OrderInvoice @relation("OrderLicense", fields: [orderId], references: [orderId], onDelete: Cascade)
+
+  @@index([licenseKey])
+  @@index([templateId])
+  @@index([userId])
+  @@index([orderId])
+  @@index([isValid])
+  @@map("licenses")
 }
 
 model Pricing {

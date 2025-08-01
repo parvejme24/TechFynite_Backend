@@ -27,9 +27,9 @@ function getUploadedImage(files: any, fieldName: string): string | undefined {
   return `/uploads/templateImage/${files[fieldName][0].filename}`;
 }
 
-function getUploadedFile(files: any, fieldName: string): string | undefined {
-  if (!files || !files[fieldName]) return undefined;
-  return `/uploads/templateFile/${files[fieldName][0].filename}`;
+function getUploadedFiles(files: any, fieldName: string): string[] {
+  if (!files || !files[fieldName]) return [];
+  return files[fieldName].map((file: any) => `/uploads/${file.filename}`);
 }
 
 export const getAllTemplates = async (req: Request, res: Response) => {
@@ -54,7 +54,7 @@ export const getTemplateById = async (req: Request, res: Response) => {
 export const createTemplate = async (req: Request, res: Response) => {
   try {
     const imageUrl = getUploadedImage(req.files, 'image');
-    const fileUrl = getUploadedFile(req.files, 'templateFile');
+    const sourceFiles = getUploadedFiles(req.files, 'templateFile');
     const screenshots = getUploadedScreenshots(req.files);
     
     const {
@@ -65,7 +65,7 @@ export const createTemplate = async (req: Request, res: Response) => {
       title,
       price: Number(price),
       imageUrl,
-      fileUrl,
+      sourceFiles,
       categoryId,
       version: Number(version),
       publishedDate,
@@ -74,7 +74,7 @@ export const createTemplate = async (req: Request, res: Response) => {
       views: views ? Number(views) : undefined,
       totalPurchase: totalPurchase ? Number(totalPurchase) : undefined,
       previewLink,
-      shortDescription,
+      shortDescription: Array.isArray(shortDescription) ? shortDescription[0] : shortDescription,
       description: parseArrayField(description),
       whatsIncluded: parseArrayField(whatsIncluded),
       keyFeatures: parseArrayField(keyFeatures),
@@ -89,7 +89,7 @@ export const createTemplate = async (req: Request, res: Response) => {
 export const updateTemplate = async (req: Request, res: Response) => {
   try {
     const imageUrl = getUploadedImage(req.files, 'image') || req.body.imageUrl;
-    const fileUrl = getUploadedFile(req.files, 'templateFile') || req.body.fileUrl;
+    const sourceFiles = getUploadedFiles(req.files, 'templateFile') || req.body.sourceFiles;
     let screenshots = getUploadedScreenshots(req.files);
     
     // If no new screenshots uploaded, use the ones from the body (if any)
@@ -105,7 +105,7 @@ export const updateTemplate = async (req: Request, res: Response) => {
       ...(title !== undefined && { title }),
       ...(price !== undefined && { price: Number(price) }),
       ...(imageUrl !== undefined && { imageUrl }),
-      ...(fileUrl !== undefined && { fileUrl }),
+      ...(sourceFiles !== undefined && { sourceFiles }),
       ...(categoryId !== undefined && { categoryId }),
       ...(version !== undefined && { version: Number(version) }),
       ...(publishedDate !== undefined && { publishedDate }),
@@ -114,7 +114,7 @@ export const updateTemplate = async (req: Request, res: Response) => {
       ...(views !== undefined && { views: Number(views) }),
       ...(totalPurchase !== undefined && { totalPurchase: Number(totalPurchase) }),
       ...(previewLink !== undefined && { previewLink }),
-      ...(shortDescription !== undefined && { shortDescription }),
+      ...(shortDescription !== undefined && { shortDescription: Array.isArray(shortDescription) ? shortDescription[0] : shortDescription }),
       ...(description !== undefined && { description: parseArrayField(description) }),
       ...(whatsIncluded !== undefined && { whatsIncluded: parseArrayField(whatsIncluded) }),
       ...(keyFeatures !== undefined && { keyFeatures: parseArrayField(keyFeatures) }),
@@ -129,8 +129,52 @@ export const updateTemplate = async (req: Request, res: Response) => {
 export const deleteTemplate = async (req: Request, res: Response) => {
   try {
     await TemplateService.delete(req.params.id);
-    res.status(204).send({ message: 'Template deleted successfully' });
+    res.status(200).json({ message: 'Template deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete template' });
+  }
+};
+
+export const getTemplateBySlug = async (req: Request, res: Response) => {
+  try {
+    const template = await TemplateService.getBySlug(req.params.slug);
+    if (!template) return res.status(404).json({ error: 'Template not found' });
+    res.json(template);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch template' });
+  }
+};
+
+export const getTemplatesByCategory = async (req: Request, res: Response) => {
+  try {
+    const templates = await TemplateService.getByCategory(req.params.id);
+    res.json(templates);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch templates by category' });
+  }
+};
+
+export const syncWithLemonSqueezy = async (req: Request, res: Response) => {
+  try {
+    const { lemonsqueezyProductId, lemonsqueezyVariantId, lemonsqueezyPermalink } = req.body;
+    
+    if (!lemonsqueezyProductId || !lemonsqueezyVariantId || !lemonsqueezyPermalink) {
+      return res.status(400).json({ 
+        error: 'Missing required LemonSqueezy fields: lemonsqueezyProductId, lemonsqueezyVariantId, lemonsqueezyPermalink' 
+      });
+    }
+
+    const template = await TemplateService.update(req.params.id, {
+      lemonsqueezyProductId,
+      lemonsqueezyVariantId,
+      lemonsqueezyPermalink,
+    });
+
+    res.json({
+      message: 'Template synced with LemonSqueezy successfully',
+      template
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to sync template with LemonSqueezy' });
   }
 };
