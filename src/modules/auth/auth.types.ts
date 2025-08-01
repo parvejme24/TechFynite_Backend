@@ -37,7 +37,7 @@ export interface LoginResponse {
     stateOrRegion: string | null;
     postCode: string | null;
     balance: number;
-    isVerified: boolean;
+    isVerified: boolean | null;
     createdAt: Date;
     updatedAt: Date;
   };

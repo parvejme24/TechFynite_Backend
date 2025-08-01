@@ -1,10 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { BlogReviewService } from './blogReview.service';
-
-const blogReviewService = new BlogReviewService();
+import { BlogReviewModel } from './blogReview.model';
 
 export const checkReviewOwnership = async (req: Request, res: Response, next: NextFunction) => {
-  const review = await blogReviewService.getReviewById(req.params.reviewId);
+  const review = await BlogReviewModel.getById(req.params.reviewId);
   if (!review) return res.status(404).json({ error: 'Review not found' });
   if (review.userId !== (req as any).user.id) {
     return res.status(403).json({ error: 'Not allowed' });
@@ -13,7 +11,7 @@ export const checkReviewOwnership = async (req: Request, res: Response, next: Ne
 };
 
 export const checkReplyOwnership = async (req: Request, res: Response, next: NextFunction) => {
-  const review = await blogReviewService.getReviewById(req.params.reviewId);
+  const review = await BlogReviewModel.getById(req.params.reviewId);
   if (
     !review ||
     typeof review.reply !== 'object' ||

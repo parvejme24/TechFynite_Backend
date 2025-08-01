@@ -38,7 +38,10 @@ export function adminOrSuperAdminOnly(
   next: NextFunction
 ) {
   const user = (req as any).user;
-  if (!user || (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) {
+  
+  // Check for both uppercase and lowercase role values
+  const userRole = user?.role?.toUpperCase();
+  if (!user || (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN")) {
     return res.status(403).json({ error: "Admins or Super Admins only" });
   }
   next();

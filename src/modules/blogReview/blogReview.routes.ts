@@ -1,20 +1,28 @@
 import { Router } from 'express';
-import { BlogReviewController } from './blogReview.controller';
-import { authMiddleware } from '../../middlewares/auth';
+import {
+  createBlogReview,
+  getBlogReviews,
+  updateBlogReview,
+  deleteBlogReview,
+  replyToReview,
+  updateReply,
+  deleteReply,
+} from './blogReview.controller';
+import { authMiddleware, adminOrSuperAdminOnly } from '../../middlewares/auth';
 
 const router = Router();
-const blogReviewController = new BlogReviewController();
 
-// Public routes (No authentication required)
-router.get('/blog-review/:blogId', blogReviewController.getReviewsByBlogId.bind(blogReviewController));
-router.get('/blog-review/review/:id', blogReviewController.getReviewById.bind(blogReviewController));
-router.post('/blog-review', blogReviewController.createBlogReview.bind(blogReviewController));
+// Public routes (no authentication required)
+router.get('/blog-reviews/:blogId', getBlogReviews);
+router.post('/blog-reviews', createBlogReview); // Anyone can create reviews
 
-// Protected routes (Authenticated users only)
-router.put('/blog-review/:id', authMiddleware, blogReviewController.updateBlogReview.bind(blogReviewController));
-router.delete('/blog-review/:id', authMiddleware, blogReviewController.deleteBlogReview.bind(blogReviewController));
+// Protected routes (require authentication)
+router.put('/blog-reviews/:id', authMiddleware, updateBlogReview);
+router.delete('/blog-reviews/:id', authMiddleware, deleteBlogReview);
 
-// Admin routes (Admin authentication required)
-router.post('/blog-review/:id/reply', authMiddleware, blogReviewController.replyToBlogReview.bind(blogReviewController));
+// Admin/Moderator routes (require admin/super admin)
+router.post('/blog-reviews/:id/reply', authMiddleware, adminOrSuperAdminOnly, replyToReview);
+router.put('/blog-reviews/replies/:replyId', authMiddleware, adminOrSuperAdminOnly, updateReply);
+router.delete('/blog-reviews/replies/:replyId', authMiddleware, adminOrSuperAdminOnly, deleteReply);
 
 export default router;

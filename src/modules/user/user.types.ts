@@ -26,7 +26,7 @@ export interface UserResponse {
   stateOrRegion?: string;
   postCode?: string;
   balance: number;
-  isVerified: boolean;
+  isVerified: boolean | null;
   createdAt: Date;
   updatedAt: Date;
 }

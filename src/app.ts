@@ -72,10 +72,63 @@ app.use("/api/v1", pricingRoutes);
 
 // error handling middleware
 app.use((err: any, req: any, res: any, next: any) => {
-  console.error(err.stack);
+  console.error('Error details:', err);
+  console.error('Error stack:', err.stack);
+  
+  // Handle multer errors specifically
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({
+      status: "error",
+      message: "File too large. Please upload a smaller file.",
+    });
+  }
+  
+  if (err.code === 'LIMIT_FILE_COUNT') {
+    return res.status(400).json({
+      status: "error",
+      message: "Too many files uploaded. Please reduce the number of files.",
+    });
+  }
+  
+  if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+    return res.status(400).json({
+      status: "error",
+      message: "Unexpected file field. Please check your form data.",
+    });
+  }
+  
+  // Handle multer parsing errors
+  if (err.message && err.message.includes('Unexpected end of form')) {
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid form data. Please check your request format.",
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+  
+  // If it's a known error with a specific message, use that
+  if (err.message && err.message !== 'Something went wrong!') {
+    return res.status(err.status || 500).json({
+      status: "error",
+      message: err.message,
+      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+  }
+  
+  // For database errors, provide more specific information
+  if (err.code) {
+    return res.status(500).json({
+      status: "error",
+      message: `Database error: ${err.code}`,
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+  
+  // Generic error fallback
   res.status(500).json({
     status: "error",
     message: "Something went wrong!",
+    details: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 });
 

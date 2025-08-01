@@ -64,6 +64,16 @@ export const uploadBlogContentImage = multer({
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB
 });
 
+// Combined blog upload middleware
+export const uploadBlogFiles = multer({
+  storage: createStorage('uploads'),
+  fileFilter: createFileFilter(['.jpg', '.jpeg', '.png', '.gif', '.webp']),
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+}).fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'contentImages', maxCount: 20 }
+]);
+
 // Template file upload (zip files only)
 export const uploadTemplateFile = multer({
   storage: createStorage('uploads/templateFile'),
