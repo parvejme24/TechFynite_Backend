@@ -4,10 +4,8 @@ const express_1 = require("express");
 const order_controller_1 = require("./order.controller");
 const auth_1 = require("../../middlewares/auth");
 const router = (0, express_1.Router)();
-router.post("/orders", auth_1.authMiddleware, order_controller_1.createOrder);
-router.put("/orders/:id", auth_1.authMiddleware, auth_1.ownerOnly, order_controller_1.updateOrder);
-router.get("/orders/:id", auth_1.authMiddleware, auth_1.ownerOnly, order_controller_1.getOrderById);
-router.get("/orders/user/:userId", auth_1.authMiddleware, auth_1.ownerOnly, order_controller_1.getOrdersByUserId);
-router.get("/orders", auth_1.adminOrSuperAdminOnly, order_controller_1.getAllOrders);
-router.delete("/orders/:id", auth_1.authMiddleware, auth_1.ownerOnly, order_controller_1.deleteOrder);
+// User order routes (require authentication)
+router.get('/user/orders', auth_1.authMiddleware, order_controller_1.getUserOrders);
+router.get('/user/orders/:id', auth_1.authMiddleware, order_controller_1.getOrderById);
+router.get('/user/download/:templateId', auth_1.authMiddleware, order_controller_1.getTemplateDownload);
 exports.default = router;

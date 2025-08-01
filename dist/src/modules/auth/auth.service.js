@@ -14,24 +14,17 @@ exports.AuthService = {
         if (existing)
             throw new Error('Email already registered');
         const hashedPassword = await bcryptjs_1.default.hash(data.password, 10);
-        const otp = (0, auth_utils_1.generateOtp)();
-        const otpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
         const user = await auth_model_1.AuthModel.create({
             ...data,
             password: hashedPassword,
-            otpCode: otp,
-            otpExpiresAt,
-            isVerified: false,
+            isVerified: true, // Auto-verify users
         });
-        await (0, auth_utils_1.sendEmail)(data.email, 'Verify your email', `Your verification code is: ${otp}\n\nVerify here:\nhttp://localhost:3000/otp\nhttps://tf-f-ts.vercel.app/otp`);
-        return { message: 'Registration successful, please verify your email.' };
+        return { message: 'Registration successful' };
     },
     login: async (data) => {
         const user = await auth_model_1.AuthModel.findByEmail(data.email);
         if (!user)
             throw new Error('Invalid credentials');
-        if (!user.isVerified)
-            throw new Error('Email not verified');
         const valid = await bcryptjs_1.default.compare(data.password, user.password);
         if (!valid)
             throw new Error('Invalid credentials');
@@ -39,20 +32,27 @@ exports.AuthService = {
         const accessToken = (0, auth_utils_1.signJwt)(payload);
         const refreshToken = (0, auth_utils_1.signRefreshToken)(payload);
         await auth_model_1.AuthModel.update(user.id, { refreshToken });
-        return { accessToken, refreshToken };
-    },
-    verifyOtp: async (data) => {
-        const user = await auth_model_1.AuthModel.findByEmail(data.email);
-        if (!user)
-            throw new Error('User not found');
-        if (user.isVerified)
-            return { message: 'Already verified' };
-        if (user.otpCode !== data.otp)
-            throw new Error('Invalid OTP');
-        if (!user.otpExpiresAt || user.otpExpiresAt < new Date())
-            throw new Error('OTP expired');
-        await auth_model_1.AuthModel.update(user.id, { isVerified: true, otpCode: null, otpExpiresAt: null });
-        return { message: 'Email verified successfully' };
+        return {
+            accessToken,
+            refreshToken,
+            user: {
+                id: user.id,
+                displayName: user.displayName,
+                email: user.email,
+                photoUrl: user.photoUrl,
+                designation: user.designation,
+                role: user.role,
+                phone: user.phone,
+                country: user.country,
+                city: user.city,
+                stateOrRegion: user.stateOrRegion,
+                postCode: user.postCode,
+                balance: user.balance,
+                isVerified: user.isVerified,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt
+            }
+        };
     },
     refreshToken: async (token) => {
         // Validate refresh token and issue new access token
@@ -95,6 +95,22 @@ exports.AuthService = {
         const user = await auth_model_1.AuthModel.findById(userId);
         if (!user)
             throw new Error('User not found');
-        return user;
+        return {
+            id: user.id,
+            displayName: user.displayName,
+            email: user.email,
+            photoUrl: user.photoUrl,
+            designation: user.designation,
+            role: user.role,
+            phone: user.phone,
+            country: user.country,
+            city: user.city,
+            stateOrRegion: user.stateOrRegion,
+            postCode: user.postCode,
+            balance: user.balance,
+            isVerified: user.isVerified,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+        };
     },
 };

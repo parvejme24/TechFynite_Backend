@@ -1,66 +1,56 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getOrdersByUserId = exports.deleteOrder = exports.getAllOrders = exports.getOrderById = exports.updateOrder = exports.createOrder = void 0;
+exports.getTemplateDownload = exports.getOrderById = exports.getUserOrders = void 0;
 const order_service_1 = require("./order.service");
-const createOrder = async (req, res) => {
+const getUserOrders = async (req, res) => {
     try {
-        const order = await order_service_1.OrderService.create(req.body);
-        res.status(201).json(order);
+        const userId = req.user?.userId;
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized - User not authenticated' });
+        }
+        const orders = await order_service_1.OrderService.getUserOrders(userId);
+        res.json(orders);
     }
     catch (error) {
-        res.status(500).json({ error: 'Failed to create order' });
+        console.error('Get user orders error:', error);
+        res.status(500).json({ error: 'Failed to fetch user orders' });
     }
 };
-exports.createOrder = createOrder;
-const updateOrder = async (req, res) => {
-    try {
-        const order = await order_service_1.OrderService.update(req.params.id, req.body);
-        res.json(order);
-    }
-    catch (error) {
-        res.status(500).json({ error: 'Failed to update order' });
-    }
-};
-exports.updateOrder = updateOrder;
+exports.getUserOrders = getUserOrders;
 const getOrderById = async (req, res) => {
     try {
-        const order = await order_service_1.OrderService.getById(req.params.id);
-        if (!order)
+        const userId = req.user?.userId;
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized - User not authenticated' });
+        }
+        const order = await order_service_1.OrderService.getOrderById(req.params.id, userId);
+        if (!order) {
             return res.status(404).json({ error: 'Order not found' });
+        }
         res.json(order);
     }
     catch (error) {
+        console.error('Get order error:', error);
         res.status(500).json({ error: 'Failed to fetch order' });
     }
 };
 exports.getOrderById = getOrderById;
-const getAllOrders = async (req, res) => {
+const getTemplateDownload = async (req, res) => {
     try {
-        const orders = await order_service_1.OrderService.getAll();
-        res.json(orders);
+        const userId = req.user?.userId;
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized - User not authenticated' });
+        }
+        const { templateId } = req.params;
+        const downloadData = await order_service_1.OrderService.getTemplateDownload(templateId, userId);
+        if (!downloadData) {
+            return res.status(404).json({ error: 'Template not found or not purchased' });
+        }
+        res.json(downloadData);
     }
     catch (error) {
-        res.status(500).json({ error: 'Failed to fetch orders' });
+        console.error('Get template download error:', error);
+        res.status(500).json({ error: 'Failed to get template download' });
     }
 };
-exports.getAllOrders = getAllOrders;
-const deleteOrder = async (req, res) => {
-    try {
-        await order_service_1.OrderService.delete(req.params.id);
-        res.status(204).send();
-    }
-    catch (error) {
-        res.status(500).json({ error: 'Failed to delete order' });
-    }
-};
-exports.deleteOrder = deleteOrder;
-const getOrdersByUserId = async (req, res) => {
-    try {
-        const orders = await order_service_1.OrderService.getAllByUserId(req.params.userId);
-        res.json(orders);
-    }
-    catch (error) {
-        res.status(500).json({ error: 'Failed to fetch orders by user' });
-    }
-};
-exports.getOrdersByUserId = getOrdersByUserId;
+exports.getTemplateDownload = getTemplateDownload;

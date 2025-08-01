@@ -1,22 +1,21 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BlogCategoryModel = void 0;
-const prisma_1 = require("../../generated/prisma");
-const prisma = new prisma_1.PrismaClient();
+const database_1 = require("../../config/database");
 exports.BlogCategoryModel = {
-    findAll: async () => {
-        return prisma.blogCategory.findMany({ include: { blogs: true } });
+    getAll: async () => {
+        return database_1.prisma.blogCategory.findMany();
     },
-    findById: async (id) => {
-        return prisma.blogCategory.findUnique({ where: { id }, include: { blogs: true } });
+    getById: async (id) => {
+        return database_1.prisma.blogCategory.findUnique({ where: { id } });
     },
     create: async (data) => {
-        return prisma.blogCategory.create({ data });
+        return database_1.prisma.blogCategory.create({ data });
     },
     update: async (id, data) => {
-        return prisma.blogCategory.update({ where: { id }, data });
+        return database_1.prisma.blogCategory.update({ where: { id }, data });
     },
     delete: async (id) => {
-        return prisma.blogCategory.delete({ where: { id } });
+        return database_1.prisma.blogCategory.delete({ where: { id } });
     },
 };

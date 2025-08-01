@@ -4,6 +4,12 @@ import { BlogReviewModel } from './blogReview.model';
 export const checkReviewOwnership = async (req: Request, res: Response, next: NextFunction) => {
   const review = await BlogReviewModel.getById(req.params.reviewId);
   if (!review) return res.status(404).json({ error: 'Review not found' });
+  
+  // Handle anonymous reviews (userId can be null)
+  if (!review.userId) {
+    return res.status(403).json({ error: 'Anonymous reviews cannot be modified' });
+  }
+  
   if (review.userId !== (req as any).user.id) {
     return res.status(403).json({ error: 'Not allowed' });
   }
@@ -18,7 +24,8 @@ export const checkReplyOwnership = async (req: Request, res: Response, next: Nex
   
   // Find the specific reply by replyId
   const replyId = req.params.replyId;
-  const reply = review.replies?.find(r => r.id === replyId);
+  const replies = (review as any).replies || [];
+  const reply = replies.find((r: any) => r.id === replyId);
   
   if (!reply) {
     return res.status(404).json({ error: 'Reply not found' });

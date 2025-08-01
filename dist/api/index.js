@@ -7,12 +7,20 @@ exports.default = handler;
 const dotenv_1 = require("dotenv");
 const database_1 = require("../src/config/database");
 const app_1 = __importDefault(require("../src/app"));
+// Load environment variables
 (0, dotenv_1.config)();
 let serverInitialized = false;
 async function handler(req, res) {
     if (!serverInitialized) {
-        await (0, database_1.connectDB)();
-        serverInitialized = true;
+        try {
+            await (0, database_1.connectDB)();
+            serverInitialized = true;
+        }
+        catch (error) {
+            console.error('Failed to connect to database:', error);
+            return res.status(500).json({ error: 'Database connection failed' });
+        }
     }
-    (0, app_1.default)(req, res);
+    // Handle the request with the Express app
+    return (0, app_1.default)(req, res);
 }

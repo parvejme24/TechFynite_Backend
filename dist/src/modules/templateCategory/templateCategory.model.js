@@ -1,22 +1,30 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TemplateCategoryModel = void 0;
-const prisma_1 = require("../../generated/prisma");
-const prisma = new prisma_1.PrismaClient();
+const database_1 = require("../../config/database");
 exports.TemplateCategoryModel = {
-    findAll: async () => {
-        return prisma.templateCategory.findMany({ include: { templates: true } });
+    getAll: async () => {
+        return database_1.prisma.templateCategory.findMany({
+            include: {
+                templates: true,
+            },
+        });
     },
-    findById: async (id) => {
-        return prisma.templateCategory.findUnique({ where: { id }, include: { templates: true } });
+    getById: async (id) => {
+        return database_1.prisma.templateCategory.findUnique({
+            where: { id },
+            include: {
+                templates: true,
+            },
+        });
     },
     create: async (data) => {
-        return prisma.templateCategory.create({ data });
+        return database_1.prisma.templateCategory.create({ data });
     },
     update: async (id, data) => {
-        return prisma.templateCategory.update({ where: { id }, data });
+        return database_1.prisma.templateCategory.update({ where: { id }, data });
     },
     delete: async (id) => {
-        return prisma.templateCategory.delete({ where: { id } });
+        return database_1.prisma.templateCategory.delete({ where: { id } });
     },
 };
