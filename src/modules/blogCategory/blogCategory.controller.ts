@@ -24,7 +24,7 @@ export const getBlogCategoryById = async (req: Request, res: Response) => {
 export const createBlogCategory = async (req: Request, res: Response) => {
   try {
     const { title, slug } = req.body;
-    let imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
+    let imageUrl = req.file ? `/uploads/blogCategoryImage/${req.file.filename}` : undefined;
     const category = await BlogCategoryService.create({
       title,
       slug,
@@ -45,7 +45,7 @@ export const updateBlogCategory = async (req: Request, res: Response) => {
   try {
     const { title, slug } = req.body;
     let imageUrl = req.file
-      ? `/uploads/${req.file.filename}`
+      ? `/uploads/blogCategoryImage/${req.file.filename}`
       : req.body.imageUrl;
     const category = await BlogCategoryService.update(req.params.id, {
       title,
@@ -66,7 +66,7 @@ export const updateBlogCategory = async (req: Request, res: Response) => {
 export const deleteBlogCategory = async (req: Request, res: Response) => {
   try {
     await BlogCategoryService.delete(req.params.id);
-    res.status(204).send({ message: "Blog category deleted successfully" });
+    res.status(200).json({ message: "Blog category deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Failed to delete blog category" });
   }

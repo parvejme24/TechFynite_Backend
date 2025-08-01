@@ -19,7 +19,17 @@ function parseArrayField(field: any): any[] {
 
 function getUploadedScreenshots(files: any): string[] {
   if (!files || !files.screenshots) return [];
-  return files.screenshots.map((file: any) => `/uploads/${file.filename}`);
+  return files.screenshots.map((file: any) => `/uploads/templateScreenshots/${file.filename}`);
+}
+
+function getUploadedImage(files: any, fieldName: string): string | undefined {
+  if (!files || !files[fieldName]) return undefined;
+  return `/uploads/templateImage/${files[fieldName][0].filename}`;
+}
+
+function getUploadedFile(files: any, fieldName: string): string | undefined {
+  if (!files || !files[fieldName]) return undefined;
+  return `/uploads/templateFile/${files[fieldName][0].filename}`;
 }
 
 export const getAllTemplates = async (req: Request, res: Response) => {
@@ -43,17 +53,19 @@ export const getTemplateById = async (req: Request, res: Response) => {
 
 export const createTemplate = async (req: Request, res: Response) => {
   try {
-    let imageUrl = req.files && (req.files as any).image
-      ? `/uploads/${(req.files as any).image[0].filename}`
-      : undefined;
+    const imageUrl = getUploadedImage(req.files, 'image');
+    const fileUrl = getUploadedFile(req.files, 'templateFile');
     const screenshots = getUploadedScreenshots(req.files);
+    
     const {
       title, price, categoryId, version, publishedDate, downloads, pages, views, totalPurchase, previewLink, shortDescription, description, whatsIncluded, keyFeatures
     } = req.body;
+    
     const template = await TemplateService.create({
       title,
       price: Number(price),
       imageUrl,
+      fileUrl,
       categoryId,
       version: Number(version),
       publishedDate,
@@ -76,21 +88,24 @@ export const createTemplate = async (req: Request, res: Response) => {
 
 export const updateTemplate = async (req: Request, res: Response) => {
   try {
-    let imageUrl = req.files && (req.files as any).image
-      ? `/uploads/${(req.files as any).image[0].filename}`
-      : req.body.imageUrl;
+    const imageUrl = getUploadedImage(req.files, 'image') || req.body.imageUrl;
+    const fileUrl = getUploadedFile(req.files, 'templateFile') || req.body.fileUrl;
     let screenshots = getUploadedScreenshots(req.files);
+    
     // If no new screenshots uploaded, use the ones from the body (if any)
     if (!screenshots.length && req.body.screenshots) {
       screenshots = parseArrayField(req.body.screenshots);
     }
+    
     const {
       title, price, categoryId, version, publishedDate, downloads, pages, views, totalPurchase, previewLink, shortDescription, description, whatsIncluded, keyFeatures
     } = req.body;
+    
     const template = await TemplateService.update(req.params.id, {
       ...(title !== undefined && { title }),
       ...(price !== undefined && { price: Number(price) }),
       ...(imageUrl !== undefined && { imageUrl }),
+      ...(fileUrl !== undefined && { fileUrl }),
       ...(categoryId !== undefined && { categoryId }),
       ...(version !== undefined && { version: Number(version) }),
       ...(publishedDate !== undefined && { publishedDate }),

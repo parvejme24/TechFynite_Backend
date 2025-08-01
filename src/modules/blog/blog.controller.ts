@@ -45,7 +45,7 @@ export const createBlog = async (req: Request, res: Response) => {
   try {
     const authorId = (req as any).user?.userId;
     let imageUrl = req.files && (req.files as any).image
-      ? `/uploads/${(req.files as any).image[0].filename}`
+      ? `/uploads/blogThumbnail/${(req.files as any).image[0].filename}`
       : req.body.imageUrl;
     const { title, categoryId, description, readingTime, content } = req.body;
     const parsedDescription: string[] = ensureArray(description);
@@ -60,7 +60,7 @@ export const createBlog = async (req: Request, res: Response) => {
       }
       parsedContent = rawContent.map((item: any, idx: number) => ({
         ...item,
-        imageUrl: contentImages[idx] ? `/uploads/${contentImages[idx].filename}` : item.imageUrl,
+        imageUrl: contentImages[idx] ? `/uploads/blogContentImage/${contentImages[idx].filename}` : item.imageUrl,
         description: ensureArray(item.description)
       }));
     }
@@ -83,7 +83,7 @@ export const createBlog = async (req: Request, res: Response) => {
 export const updateBlog = async (req: Request, res: Response) => {
   try {
     let imageUrl = req.files && (req.files as any).image
-      ? `/uploads/${(req.files as any).image[0].filename}`
+      ? `/uploads/blogThumbnail/${(req.files as any).image[0].filename}`
       : req.body.imageUrl;
     const { title, categoryId, description, readingTime, content } = req.body;
     const parsedDescription: string[] | undefined = description !== undefined ? ensureArray(description) : undefined;
@@ -98,7 +98,7 @@ export const updateBlog = async (req: Request, res: Response) => {
       }
       parsedContent = rawContent.map((item: any, idx: number) => ({
         ...item,
-        imageUrl: contentImages[idx] ? `/uploads/${contentImages[idx].filename}` : item.imageUrl,
+        imageUrl: contentImages[idx] ? `/uploads/blogContentImage/${contentImages[idx].filename}` : item.imageUrl,
         description: ensureArray(item.description)
       }));
     }
@@ -121,7 +121,7 @@ export const updateBlog = async (req: Request, res: Response) => {
 export const deleteBlog = async (req: Request, res: Response) => {
   try {
     await BlogModel.delete(req.params.id);
-    res.status(204).send({ message: 'Blog deleted successfully' });
+    res.status(200).json({ message: 'Blog deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete blog' });
   }

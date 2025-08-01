@@ -2,6 +2,7 @@ export interface CreateTemplateRequest {
   title: string;
   price: number;
   imageUrl?: string;
+  fileUrl?: string; // For zip file
   categoryId: string;
   version: number;
   publishedDate: string;
@@ -21,6 +22,7 @@ export interface UpdateTemplateRequest {
   title?: string;
   price?: number;
   imageUrl?: string;
+  fileUrl?: string; // For zip file
   categoryId?: string;
   version?: number;
   publishedDate?: string;

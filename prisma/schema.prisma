@@ -9,30 +9,34 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(uuid())
+  id            String    @id @default(uuid())
   displayName   String
-  email         String         @unique
+  email         String    @unique
   password      String
   photoUrl      String?
   designation   String?
-  role          UserRole       @default(USER)
+  role          UserRole  @default(USER)
   phone         String?
   country       String?
   city          String?
   stateOrRegion String?
   postCode      String?
-  balance       Float          @default(0.0)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  isVerified    Boolean        @default(false)
+  balance       Float     @default(0.0)
+  isVerified    Boolean?  @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   otpCode       String?
   otpExpiresAt  DateTime?
   refreshToken  String?
-  blogLikes     BlogLike[]     @relation("UserLikes")
-  blogs         Blog[]         @relation("BlogAuthor")
-  notifications Notification[] @relation("UserNotifications")
-  orders        OrderInvoice[] @relation("UserOrders")
-  purchases     Template[]     @relation("UserPurchases")
+
+  blogLikes      BlogLike[]     @relation("UserLikes")
+  blogs          Blog[]         @relation("BlogAuthor")
+  notifications  Notification[] @relation("UserNotifications")
+  orders         OrderInvoice[] @relation("UserOrders")
+  purchases      Template[]     @relation("UserPurchases")
+  reviews        BlogReview[]   @relation("UserReviews")
+  contacts       Contact[]      @relation("UserContacts")
+  contactReplies ContactReply[] @relation("UserContactReplies")
 
   @@index([email])
   @@map("users")
@@ -64,7 +68,7 @@ model Template {
   views            Int              @default(0)
   totalPurchase    Int              @default(0)
   previewLink      String?
-  // sourceFiles      String[]
+  sourceFiles      String[]
   shortDescription String
   description      String[]
   whatsIncluded    String[]
@@ -126,14 +130,16 @@ model BlogContent {
 model BlogReview {
   id          String   @id @default(uuid())
   blogId      String
-  userName    String
-  commentDate DateTime @default(now())
+  userId      String
+  fullName    String
+  email       String
   photoUrl    String?
   commentText String
   reply       Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   blog        Blog     @relation("BlogReviews", fields: [blogId], references: [id])
+  user        User     @relation("UserReviews", fields: [userId], references: [id])
 
   @@map("blog_reviews")
 }
@@ -192,25 +198,46 @@ model Notification {
   @@map("notifications")
 }
 
-model Contact {
-  id             String   @id @default(uuid())
-  projectDetails String
-  budget         String
-  fullName       String
-  email          String
-  companyName    String
-  serviceRequred String
-  createdAt      DateTime @default(now())
-
-  @@map("contacts")
-}
-
 model Newsletter {
   id        String   @id @default(uuid())
   email     String   @unique
   createdAt DateTime @default(now())
 
   @@map("newsletters")
+}
+
+model Contact {
+  id             String         @id @default(uuid())
+  projectDetails String
+  budget         String
+  fullName       String
+  email          String
+  companyName    String
+  serviceRequred String
+  status         ContactStatus  @default(PENDING)
+  userId         String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  user           User?          @relation("UserContacts", fields: [userId], references: [id])
+  replies        ContactReply[] @relation("ContactReplies")
+
+  @@map("contacts")
+}
+
+model ContactReply {
+  id        String   @id @default(uuid())
+  subject   String
+  message   String
+  contactId String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  contact Contact @relation("ContactReplies", fields: [contactId], references: [id], onDelete: Cascade)
+  user    User    @relation("UserContactReplies", fields: [userId], references: [id])
+
+  @@map("contact_replies")
 }
 
 model Pricing {
@@ -267,4 +294,11 @@ enum NotificationType {
   TEMPLATE_DELIVERED
   BLOG_COMMENT
   ACCOUNT_UPDATE
+}
+
+enum ContactStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
 }

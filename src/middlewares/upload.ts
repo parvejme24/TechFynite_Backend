@@ -1,9 +1,30 @@
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 
-const storage = multer.diskStorage({
+// Ensure upload directories exist
+const uploadDirs = [
+  'uploads/templateImage',
+  'uploads/blogThumbnail', 
+  'uploads/blogContentImage',
+  'uploads/templateFile',
+  'uploads/templateScreenshots',
+  'uploads/userProfile',
+  'uploads/blogCategoryImage',
+  'uploads/templateCategoryImage'
+];
+
+uploadDirs.forEach(dir => {
+  const fullPath = path.join(__dirname, '../../', dir);
+  if (!fs.existsSync(fullPath)) {
+    fs.mkdirSync(fullPath, { recursive: true });
+  }
+});
+
+// Base storage configuration
+const createStorage = (destination: string) => multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '../../uploads'));
+    cb(null, path.join(__dirname, '../../', destination));
   },
   filename: function (req, file, cb) {
     const ext = path.extname(file.originalname);
@@ -12,4 +33,74 @@ const storage = multer.diskStorage({
   },
 });
 
-export const upload = multer({ storage }); 
+// File filter for different upload types
+const createFileFilter = (allowedTypes: string[]) => (req: any, file: any, cb: any) => {
+  const fileExtension = path.extname(file.originalname).toLowerCase();
+  if (allowedTypes.includes(fileExtension)) {
+    cb(null, true);
+  } else {
+    cb(new Error(`Only ${allowedTypes.join(', ')} files are allowed`), false);
+  }
+};
+
+// Template image upload (images only)
+export const uploadTemplateImage = multer({
+  storage: createStorage('uploads/templateImage'),
+  fileFilter: createFileFilter(['.jpg', '.jpeg', '.png', '.gif', '.webp']),
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+});
+
+// Blog thumbnail upload (images only)
+export const uploadBlogThumbnail = multer({
+  storage: createStorage('uploads/blogThumbnail'),
+  fileFilter: createFileFilter(['.jpg', '.jpeg', '.png', '.gif', '.webp']),
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+});
+
+// Blog content image upload (images only)
+export const uploadBlogContentImage = multer({
+  storage: createStorage('uploads/blogContentImage'),
+  fileFilter: createFileFilter(['.jpg', '.jpeg', '.png', '.gif', '.webp']),
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+});
+
+// Template file upload (zip files only)
+export const uploadTemplateFile = multer({
+  storage: createStorage('uploads/templateFile'),
+  fileFilter: createFileFilter(['.zip']),
+  limits: { fileSize: 100 * 1024 * 1024 } // 100MB
+});
+
+// Template screenshots upload (images only)
+export const uploadTemplateScreenshots = multer({
+  storage: createStorage('uploads/templateScreenshots'),
+  fileFilter: createFileFilter(['.jpg', '.jpeg', '.png', '.gif', '.webp']),
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+});
+
+// User profile upload (images only)
+export const uploadUserProfile = multer({
+  storage: createStorage('uploads/userProfile'),
+  fileFilter: createFileFilter(['.jpg', '.jpeg', '.png', '.gif', '.webp']),
+  limits: { fileSize: 2 * 1024 * 1024 } // 2MB
+});
+
+// Blog category image upload (images only)
+export const uploadBlogCategoryImage = multer({
+  storage: createStorage('uploads/blogCategoryImage'),
+  fileFilter: createFileFilter(['.jpg', '.jpeg', '.png', '.gif', '.webp']),
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+});
+
+// Template category image upload (images only)
+export const uploadTemplateCategoryImage = multer({
+  storage: createStorage('uploads/templateCategoryImage'),
+  fileFilter: createFileFilter(['.jpg', '.jpeg', '.png', '.gif', '.webp']),
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+});
+
+// General upload (for backward compatibility)
+export const upload = multer({
+  storage: createStorage('uploads'),
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+}); 

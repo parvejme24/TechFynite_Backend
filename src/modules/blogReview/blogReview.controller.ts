@@ -1,87 +1,219 @@
 import { Request, Response } from 'express';
 import { BlogReviewService } from './blogReview.service';
+import { createBlogReviewSchema, updateBlogReviewSchema } from './blogReview.types';
 
-const reviewResponse = (r: any) => ({
-  blogId: r.blogId,
-  userName: r.userName,
-  commentDate: r.commentDate,
-  photoUrl: r.photoUrl,
-  commentText: r.commentText,
-  reply: r.reply
-});
+const blogReviewService = new BlogReviewService();
 
-export const getBlogReviewsByBlogId = async (req: Request, res: Response) => {
-  try {
-    const reviews = await BlogReviewService.getByBlogId(req.params.blogId);
-    res.json(reviews.map(reviewResponse));
-  } catch {
-    res.status(500).json({ error: 'Failed to fetch blog reviews' });
+export class BlogReviewController {
+  // Create a new blog review (No authentication required)
+  async createBlogReview(req: Request, res: Response) {
+    try {
+      // Validate request body
+      const validatedData = createBlogReviewSchema.parse(req.body);
+
+      // Generate a temporary user ID for anonymous reviews
+      const tempUserId = `anonymous_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      const review = await blogReviewService.createBlogReview(validatedData, tempUserId);
+
+      res.status(201).json(review);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({
+          success: false,
+          message: 'Validation error',
+          errors: error.errors,
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to create blog review',
+      });
+    }
   }
-};
 
-export const getBlogReviewById = async (req: Request, res: Response) => {
-  try {
-    const review = await BlogReviewService.getById(req.params.reviewId);
-    if (!review) return res.status(404).json({ error: 'Blog review not found' });
-    res.json(reviewResponse(review));
-  } catch {
-    res.status(500).json({ error: 'Failed to fetch blog review' });
-  }
-};
+  // Get all reviews for a blog
+  async getReviewsByBlogId(req: Request, res: Response) {
+    try {
+      const { blogId } = req.params;
 
-export const createBlogReview = async (req: Request, res: Response) => {
-  try {
-    const user = (req as any).user;
-    const review = await BlogReviewService.create({
-      ...req.body,
-      userName: user.displayName,
-      photoUrl: user.photoUrl,
-    });
-    res.status(201).json(reviewResponse(review));
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to create blog review' });
-  }
-};
+      const reviews = await blogReviewService.getReviewsByBlogId(blogId);
 
-export const updateBlogReview = async (req: Request, res: Response) => {
-  try {
-    const review = await BlogReviewService.update(req.params.reviewId, req.body);
-    res.json(reviewResponse(review));
-  } catch {
-    res.status(500).json({ error: 'Failed to update blog review' });
+      res.status(200).json(reviews);
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to fetch blog reviews',
+      });
+    }
   }
-};
 
-export const deleteBlogReview = async (req: Request, res: Response) => {
-  try {
-    await BlogReviewService.delete(req.params.reviewId);
-    res.status(204).send();
-  } catch {
-    res.status(500).json({ error: 'Failed to delete blog review' });
-  }
-};
+  // Get review by ID
+  async getReviewById(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
 
-export const replyToBlogReview = async (req: Request, res: Response) => {
-  try {
-    const user = (req as any).user;
-    const reply = {
-      userName: user.displayName,
-      photoUrl: user.photoUrl,
-      ...req.body
-    };
-    const updated = await BlogReviewService.update(req.params.reviewId, { reply });
-    res.json(reviewResponse(updated));
-  } catch {
-    res.status(500).json({ error: 'Failed to reply to blog review' });
-  }
-};
+      const review = await blogReviewService.getReviewById(id);
 
-export const updateBlogReviewReply = async (req: Request, res: Response) => {
-  try {
-    const updated = await BlogReviewService.update(req.params.reviewId, { reply: req.body });
-    res.json(reviewResponse(updated));
-  } catch {
-    res.status(500).json({ error: 'Failed to update blog review reply' });
+      if (!review) {
+        return res.status(404).json({
+          success: false,
+          message: 'Blog review not found',
+        });
+      }
+
+      res.status(200).json(review);
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to fetch blog review',
+      });
+    }
   }
-};
+
+  // Update blog review (Only for authenticated users who own the review)
+  async updateBlogReview(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const user = (req as any).user;
+
+      if (!user || !user.id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated',
+        });
+      }
+
+      // Check if review exists
+      const exists = await blogReviewService.reviewExists(id);
+      if (!exists) {
+        return res.status(404).json({
+          success: false,
+          message: 'Blog review not found',
+        });
+      }
+
+      // Check if user can modify this review
+      const canModify = await blogReviewService.canUserModifyReview(id, user.id);
+      if (!canModify) {
+        return res.status(403).json({
+          success: false,
+          message: 'You can only modify your own reviews',
+        });
+      }
+
+      // Validate request body
+      const validatedData = updateBlogReviewSchema.parse(req.body);
+
+      const review = await blogReviewService.updateBlogReview(id, validatedData);
+
+      res.status(200).json(review);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({
+          success: false,
+          message: 'Validation error',
+          errors: error.errors,
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to update blog review',
+      });
+    }
+  }
+
+  // Delete blog review (Only for authenticated users who own the review)
+  async deleteBlogReview(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const user = (req as any).user;
+
+      if (!user || !user.id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated',
+        });
+      }
+
+      // Check if review exists
+      const exists = await blogReviewService.reviewExists(id);
+      if (!exists) {
+        return res.status(404).json({
+          success: false,
+          message: 'Blog review not found',
+        });
+      }
+
+      // Check if user can modify this review
+      const canModify = await blogReviewService.canUserModifyReview(id, user.id);
+      if (!canModify) {
+        return res.status(403).json({
+          success: false,
+          message: 'You can only delete your own reviews',
+        });
+      }
+
+      await blogReviewService.deleteBlogReview(id);
+
+      res.status(200).json({
+        success: true,
+        message: 'Blog review deleted successfully',
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to delete blog review',
+      });
+    }
+  }
+
+  // Reply to blog review (Admin only)
+  async replyToBlogReview(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const user = (req as any).user;
+
+      if (!user || !user.id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated',
+        });
+      }
+
+      // Check if user is admin
+      if (user.role !== 'ADMIN') {
+        return res.status(403).json({
+          success: false,
+          message: 'Only admins can reply to reviews',
+        });
+      }
+
+      // Check if review exists
+      const exists = await blogReviewService.reviewExists(id);
+      if (!exists) {
+        return res.status(404).json({
+          success: false,
+          message: 'Blog review not found',
+        });
+      }
+
+      const reply = {
+        userName: user.displayName,
+        photoUrl: user.photoUrl,
+        ...req.body,
+      };
+
+      const review = await blogReviewService.updateBlogReview(id, { reply });
+
+      res.status(200).json(review);
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to reply to blog review',
+      });
+    }
+  }
+}

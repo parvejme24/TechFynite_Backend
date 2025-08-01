@@ -1,24 +1,20 @@
 import { Router } from 'express';
-import {
-  getBlogReviewsByBlogId,
-  getBlogReviewById,
-  createBlogReview,
-  updateBlogReview,
-  deleteBlogReview,
-  replyToBlogReview,
-  updateBlogReviewReply
-} from './blogReview.controller';
+import { BlogReviewController } from './blogReview.controller';
 import { authMiddleware } from '../../middlewares/auth';
-import { checkReviewOwnership, checkReplyOwnership } from './blogReview.middleware';
 
 const router = Router();
+const blogReviewController = new BlogReviewController();
 
-router.get('/blog-review/:blogId', getBlogReviewsByBlogId);
-router.get('/blog-review/review/:reviewId', getBlogReviewById);
-router.post('/blog-review', authMiddleware, createBlogReview);
-router.put('/blog-review/:reviewId', authMiddleware, checkReviewOwnership, updateBlogReview);
-router.delete('/blog-review/:reviewId', authMiddleware, checkReviewOwnership, deleteBlogReview);
-router.post('/blog-review/:reviewId/reply', authMiddleware, replyToBlogReview);
-router.put('/blog-review/:reviewId/reply', authMiddleware, checkReplyOwnership, updateBlogReviewReply);
+// Public routes (No authentication required)
+router.get('/blog-review/:blogId', blogReviewController.getReviewsByBlogId.bind(blogReviewController));
+router.get('/blog-review/review/:id', blogReviewController.getReviewById.bind(blogReviewController));
+router.post('/blog-review', blogReviewController.createBlogReview.bind(blogReviewController));
+
+// Protected routes (Authenticated users only)
+router.put('/blog-review/:id', authMiddleware, blogReviewController.updateBlogReview.bind(blogReviewController));
+router.delete('/blog-review/:id', authMiddleware, blogReviewController.deleteBlogReview.bind(blogReviewController));
+
+// Admin routes (Admin authentication required)
+router.post('/blog-review/:id/reply', authMiddleware, blogReviewController.replyToBlogReview.bind(blogReviewController));
 
 export default router;

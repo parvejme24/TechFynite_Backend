@@ -9,7 +9,7 @@ export const AuthModel = {
   findById: async (id: string): Promise<User | null> => {
     return prisma.user.findUnique({ where: { id } });
   },
-  create: async (data: Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'otpCode' | 'otpExpiresAt' | 'isVerified' | 'refreshToken'>): Promise<User> => {
+  create: async (data: Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'otpCode' | 'otpExpiresAt' | 'refreshToken'>> & { displayName: string; email: string; password: string }): Promise<User> => {
     return prisma.user.create({ data });
   },
   update: async (id: string, data: Partial<User>): Promise<User> => {

@@ -1,6 +1,6 @@
 import { AuthModel } from './auth.model';
-import { RegisterRequest, LoginRequest, VerifyOtpRequest, ResetPasswordRequest, JwtPayload } from './auth.types';
-import { signJwt, signRefreshToken, verifyRefreshToken, generateOtp, sendEmail, sendOtpEmail } from './auth.utils';
+import { RegisterRequest, LoginRequest, ResetPasswordRequest, JwtPayload, LoginResponse } from './auth.types';
+import { signJwt, signRefreshToken, verifyRefreshToken, generateOtp, sendEmail } from './auth.utils';
 import bcrypt from 'bcryptjs';
 
 const OTP_EXPIRY_MINUTES = Number(process.env.OTP_EXPIRY_MINUTES) || 10;
@@ -10,40 +10,44 @@ export const AuthService = {
     const existing = await AuthModel.findByEmail(data.email);
     if (existing) throw new Error('Email already registered');
     const hashedPassword = await bcrypt.hash(data.password, 10);
-    const otp = generateOtp();
-    const otpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
     const user = await AuthModel.create({
       ...data,
       password: hashedPassword,
-      otpCode: otp,
-      otpExpiresAt,
-      isVerified: false,
-    } as any);
-    // await sendOtpEmail(data.email, otp); // OTP email sending is temporarily disabled
-    return { message: 'Registration successful, please verify your email.' };
+      isVerified: true, // Auto-verify users
+    });
+    return { message: 'Registration successful' };
   },
 
-  login: async (data: LoginRequest) => {
+  login: async (data: LoginRequest): Promise<LoginResponse> => {
     const user = await AuthModel.findByEmail(data.email);
     if (!user) throw new Error('Invalid credentials');
-    if (!user.isVerified) throw new Error('Email not verified');
     const valid = await bcrypt.compare(data.password, user.password);
     if (!valid) throw new Error('Invalid credentials');
     const payload: JwtPayload = { userId: user.id, email: user.email, role: user.role };
     const accessToken = signJwt(payload);
     const refreshToken = signRefreshToken(payload);
     await AuthModel.update(user.id, { refreshToken });
-    return { accessToken, refreshToken };
-  },
-
-  verifyOtp: async (data: VerifyOtpRequest) => {
-    const user = await AuthModel.findByEmail(data.email);
-    if (!user) throw new Error('User not found');
-    if (user.isVerified) return { message: 'Already verified' };
-    if (user.otpCode !== data.otp) throw new Error('Invalid OTP');
-    if (!user.otpExpiresAt || user.otpExpiresAt < new Date()) throw new Error('OTP expired');
-    await AuthModel.update(user.id, { isVerified: true, otpCode: null, otpExpiresAt: null });
-    return { message: 'Email verified successfully' };
+    return { 
+      accessToken, 
+      refreshToken,
+      user: {
+        id: user.id,
+        displayName: user.displayName,
+        email: user.email,
+        photoUrl: user.photoUrl,
+        designation: user.designation,
+        role: user.role,
+        phone: user.phone,
+        country: user.country,
+        city: user.city,
+        stateOrRegion: user.stateOrRegion,
+        postCode: user.postCode,
+        balance: user.balance,
+        isVerified: user.isVerified,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      }
+    };
   },
 
   refreshToken: async (token: string) => {
@@ -88,6 +92,22 @@ export const AuthService = {
   getCurrentUser: async (userId: string) => {
     const user = await AuthModel.findById(userId);
     if (!user) throw new Error('User not found');
-    return user;
+    return {
+      id: user.id,
+      displayName: user.displayName,
+      email: user.email,
+      photoUrl: user.photoUrl,
+      designation: user.designation,
+      role: user.role,
+      phone: user.phone,
+      country: user.country,
+      city: user.city,
+      stateOrRegion: user.stateOrRegion,
+      postCode: user.postCode,
+      balance: user.balance,
+      isVerified: user.isVerified,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    };
   },
 }; 

@@ -19,15 +19,6 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-export const verifyOtp = async (req: Request, res: Response) => {
-  try {
-    const result = await AuthService.verifyOtp(req.body);
-    res.json(result);
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
-  }
-};
-
 export const refreshToken = async (req: Request, res: Response) => {
   try {
     const { refreshToken } = req.body;
