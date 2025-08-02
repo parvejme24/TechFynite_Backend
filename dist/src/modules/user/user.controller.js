@@ -58,7 +58,7 @@ const getUserById = async (req, res) => {
 exports.getUserById = getUserById;
 const updateUser = async (req, res) => {
     try {
-        let photoUrl = req.file ? `/uploads/${req.file.filename}` : req.body.photoUrl;
+        let photoUrl = req.file ? req.file.path : req.body.photoUrl;
         // Only allow updating allowed fields (email is not allowed)
         const updateData = { photoUrl };
         for (const field of ALLOWED_PROFILE_FIELDS) {

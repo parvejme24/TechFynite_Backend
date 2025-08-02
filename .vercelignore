@@ -17,4 +17,6 @@ dist
 coverage
 .nyc_output
 .DS_Store
-Thumbs.db 
+Thumbs.db
+uploads/
+deploy.sh 

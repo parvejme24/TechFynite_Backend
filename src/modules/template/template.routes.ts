@@ -10,8 +10,8 @@ import {
   syncWithLemonSqueezy,
 } from './template.controller';
 import { 
-  uploadTemplateFiles
-} from '../../middlewares/upload';
+  uploadTemplateFilesCloudinary
+} from '../../middlewares/cloudinary-upload';
 import { authMiddleware, adminOrSuperAdminOnly } from '../../middlewares/auth';
 
 const router = Router();
@@ -24,11 +24,11 @@ router.get('/templates/category/:id', getTemplatesByCategory);
 
 // Admin routes (require admin/super admin authentication)
 router.post('/templates', authMiddleware, adminOrSuperAdminOnly,
-  uploadTemplateFiles,
+  uploadTemplateFilesCloudinary,
   createTemplate
 );
 router.put('/templates/:id', authMiddleware, adminOrSuperAdminOnly,
-  uploadTemplateFiles,
+  uploadTemplateFilesCloudinary,
   updateTemplate
 );
 router.delete('/templates/:id', authMiddleware, adminOrSuperAdminOnly, deleteTemplate);

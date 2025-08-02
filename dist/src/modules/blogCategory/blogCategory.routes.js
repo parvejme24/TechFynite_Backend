@@ -2,11 +2,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const blogCategory_controller_1 = require("./blogCategory.controller");
-const upload_1 = require("../../middlewares/upload");
+const cloudinary_upload_1 = require("../../middlewares/cloudinary-upload");
 const router = (0, express_1.Router)();
 router.get("/blog-categories", blogCategory_controller_1.getAllBlogCategories);
 router.get("/blog-categories/:id", blogCategory_controller_1.getBlogCategoryById);
-router.post("/blog-categories", upload_1.uploadBlogCategoryImage.single('image'), blogCategory_controller_1.createBlogCategory);
-router.put("/blog-categories/:id", upload_1.uploadBlogCategoryImage.single('image'), blogCategory_controller_1.updateBlogCategory);
+router.post("/blog-categories", cloudinary_upload_1.uploadCategoryImageCloudinary, blogCategory_controller_1.createBlogCategory);
+router.put("/blog-categories/:id", cloudinary_upload_1.uploadCategoryImageCloudinary, blogCategory_controller_1.updateBlogCategory);
 router.delete("/blog-categories/:id", blogCategory_controller_1.deleteBlogCategory);
 exports.default = router;

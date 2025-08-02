@@ -19,17 +19,17 @@ function parseArrayField(field: any): any[] {
 
 function getUploadedScreenshots(files: any): string[] {
   if (!files || !files.screenshots) return [];
-  return files.screenshots.map((file: any) => `/uploads/templateScreenshots/${file.filename}`);
+  return files.screenshots.map((file: any) => file.path);
 }
 
 function getUploadedImage(files: any, fieldName: string): string | undefined {
   if (!files || !files[fieldName]) return undefined;
-  return `/uploads/templateImage/${files[fieldName][0].filename}`;
+  return files[fieldName][0].path;
 }
 
 function getUploadedFiles(files: any, fieldName: string): string[] {
   if (!files || !files[fieldName]) return [];
-  return files[fieldName].map((file: any) => `/uploads/${file.filename}`);
+  return files[fieldName].map((file: any) => file.path);
 }
 
 export const getAllTemplates = async (req: Request, res: Response) => {

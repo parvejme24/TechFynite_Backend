@@ -15,8 +15,8 @@ import {
   togglePublishStatus,
 } from './blog.controller';
 import { 
-  uploadBlogFiles
-} from '../../middlewares/upload';
+  uploadBlogFilesCloudinary
+} from '../../middlewares/cloudinary-upload';
 import { authMiddleware } from '../../middlewares/auth';
 
 const router = Router();
@@ -32,11 +32,11 @@ router.get('/blogs/author/:authorId', getBlogsByAuthor);
 
 // Protected routes (require authentication)
 router.post('/blogs', authMiddleware, 
-  uploadBlogFiles,
+  uploadBlogFilesCloudinary,
   createBlog
 );
 router.put('/blogs/:id', authMiddleware, 
-  uploadBlogFiles,
+  uploadBlogFilesCloudinary,
   updateBlog
 );
 router.delete('/blogs/:id', authMiddleware, deleteBlog);

@@ -95,7 +95,7 @@ export const createBlog = async (req: Request, res: Response) => {
 
     let imageUrl = req.body.imageUrl;
     if (req.files && (req.files as any).image && (req.files as any).image[0]) {
-      imageUrl = `/uploads/blogThumbnail/${(req.files as any).image[0].filename}`;
+      imageUrl = (req.files as any).image[0].path;
     }
 
     const { title, categoryId, description, readingTime, content, slug, isPublished } = req.body;
@@ -130,7 +130,7 @@ export const createBlog = async (req: Request, res: Response) => {
       
       parsedContent = rawContent.map((item: any, idx: number) => ({
         ...item,
-        imageUrl: contentImages[idx] ? `/uploads/blogContentImage/${contentImages[idx].filename}` : item.imageUrl,
+        imageUrl: contentImages[idx] ? contentImages[idx].path : item.imageUrl,
         description: ensureArray(item.description), // Handle content description as multiple paragraphs
         order: item.order || idx
       }));
@@ -167,7 +167,7 @@ export const updateBlog = async (req: Request, res: Response) => {
 
     let imageUrl = req.body.imageUrl;
     if (req.files && (req.files as any).image && (req.files as any).image[0]) {
-      imageUrl = `/uploads/blogThumbnail/${(req.files as any).image[0].filename}`;
+      imageUrl = (req.files as any).image[0].path;
     }
 
     const { title, categoryId, description, readingTime, content, slug, isPublished } = req.body;
@@ -188,7 +188,7 @@ export const updateBlog = async (req: Request, res: Response) => {
       
       parsedContent = rawContent.map((item: any, idx: number) => ({
         ...item,
-        imageUrl: contentImages[idx] ? `/uploads/blogContentImage/${contentImages[idx].filename}` : item.imageUrl,
+        imageUrl: contentImages[idx] ? contentImages[idx].path : item.imageUrl,
         description: ensureArray(item.description), // Handle content description as multiple paragraphs
         order: item.order || idx
       }));

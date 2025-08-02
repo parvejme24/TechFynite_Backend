@@ -24,7 +24,7 @@ export const getBlogCategoryById = async (req: Request, res: Response) => {
 export const createBlogCategory = async (req: Request, res: Response) => {
   try {
     const { title, slug } = req.body;
-    let imageUrl = req.file ? `/uploads/blogCategoryImage/${req.file.filename}` : undefined;
+    let imageUrl = req.file ? req.file.path : undefined;
     const category = await BlogCategoryService.create({
       title,
       slug,
@@ -45,7 +45,7 @@ export const updateBlogCategory = async (req: Request, res: Response) => {
   try {
     const { title, slug } = req.body;
     let imageUrl = req.file
-      ? `/uploads/blogCategoryImage/${req.file.filename}`
+      ? req.file.path
       : req.body.imageUrl;
     const category = await BlogCategoryService.update(req.params.id, {
       title,

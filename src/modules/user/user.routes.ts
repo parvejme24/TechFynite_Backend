@@ -6,7 +6,7 @@ import {
   updateUserRole
 } from './user.controller';
 import { authMiddleware } from '../../middlewares/auth';
-import { uploadUserProfile } from '../../middlewares/upload';
+import { uploadUserProfileCloudinary } from '../../middlewares/cloudinary-upload';
 import express from 'express';
 
 const router = Router();
@@ -18,14 +18,16 @@ router.get('/users', authMiddleware, getAllUsers);
 router.get('/users/:id', authMiddleware, getUserById);
 
 // Update user profile (with photo upload)
-router.put('/users/:id', authMiddleware, uploadUserProfile.single('photo'), updateUser);
+router.put('/users/:id', authMiddleware, 
+  uploadUserProfileCloudinary, 
+  updateUser
+);
 
 // Update user role (ADMIN/SUPER_ADMIN only)
 // Handle both JSON and form-data
 router.put('/users/:id/role', 
   express.json({ limit: '10mb' }), 
   express.urlencoded({ extended: true, limit: '10mb' }), 
-  uploadUserProfile.none(), // Handle form-data without files
   authMiddleware, 
   updateUserRole
 );

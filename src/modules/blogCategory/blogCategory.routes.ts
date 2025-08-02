@@ -6,14 +6,14 @@ import {
   updateBlogCategory,
   deleteBlogCategory,
 } from "./blogCategory.controller";
-import { uploadBlogCategoryImage } from '../../middlewares/upload';
+import { uploadCategoryImageCloudinary } from '../../middlewares/cloudinary-upload';
 
 const router = Router();
 
 router.get("/blog-categories", getAllBlogCategories);
 router.get("/blog-categories/:id", getBlogCategoryById);
-router.post("/blog-categories", uploadBlogCategoryImage.single('image'), createBlogCategory);
-router.put("/blog-categories/:id", uploadBlogCategoryImage.single('image'), updateBlogCategory);
+router.post("/blog-categories", uploadCategoryImageCloudinary, createBlogCategory);
+router.put("/blog-categories/:id", uploadCategoryImageCloudinary, updateBlogCategory);
 router.delete("/blog-categories/:id", deleteBlogCategory);
 
 export default router;

@@ -7,7 +7,7 @@ exports.upload = exports.uploadTemplateCategoryImage = exports.uploadBlogCategor
 const multer_1 = __importDefault(require("multer"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
-// Ensure upload directories exist
+// Ensure upload directories exist (only in development)
 const uploadDirs = [
     'uploads/templateImage',
     'uploads/blogThumbnail',
@@ -18,12 +18,15 @@ const uploadDirs = [
     'uploads/blogCategoryImage',
     'uploads/templateCategoryImage'
 ];
-uploadDirs.forEach(dir => {
-    const fullPath = path_1.default.join(__dirname, '../../', dir);
-    if (!fs_1.default.existsSync(fullPath)) {
-        fs_1.default.mkdirSync(fullPath, { recursive: true });
-    }
-});
+// Only create directories in development environment
+if (process.env.NODE_ENV === 'development') {
+    uploadDirs.forEach(dir => {
+        const fullPath = path_1.default.join(__dirname, '../../', dir);
+        if (!fs_1.default.existsSync(fullPath)) {
+            fs_1.default.mkdirSync(fullPath, { recursive: true });
+        }
+    });
+}
 // Base storage configuration
 const createStorage = (destination) => multer_1.default.diskStorage({
     destination: function (req, file, cb) {

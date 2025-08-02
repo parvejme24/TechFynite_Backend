@@ -24,7 +24,7 @@ export const getTemplateCategoryById = async (req: Request, res: Response) => {
 export const createTemplateCategory = async (req: Request, res: Response) => {
   try {
     const { title, slug } = req.body;
-    let imageUrl = req.file ? `/uploads/templateCategoryImage/${req.file.filename}` : undefined;
+    let imageUrl = req.file ? req.file.path : undefined;
     const category = await TemplateCategoryService.create({ title, slug, imageUrl } as CreateTemplateCategoryRequest);
     res.status(201).json(category);
   } catch (error) {
@@ -35,7 +35,7 @@ export const createTemplateCategory = async (req: Request, res: Response) => {
 export const updateTemplateCategory = async (req: Request, res: Response) => {
   try {
     const { title, slug } = req.body;
-    let imageUrl = req.file ? `/uploads/templateCategoryImage/${req.file.filename}` : req.body.imageUrl;
+    let imageUrl = req.file ? req.file.path : req.body.imageUrl;
     const category = await TemplateCategoryService.update(req.params.id, { title, slug, imageUrl } as UpdateTemplateCategoryRequest);
     res.json(category);
   } catch (error) {

@@ -23,10 +23,8 @@ const pricing_1 = require("./modules/pricing");
 const checkout_1 = require("./modules/checkout");
 const webhook_1 = require("./modules/webhook");
 const license_1 = require("./modules/license");
-const path_1 = __importDefault(require("path"));
 const app = (0, express_1.default)();
-// Serve uploads directory statically
-app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../uploads')));
+// Static file serving removed - using Cloudinary for all file uploads
 // security middleware
 app.use((0, helmet_1.default)());
 app.use((0, cors_1.default)({
@@ -79,7 +77,7 @@ app.use("/api/v1", license_1.licenseRoutes);
 app.use((err, req, res, next) => {
     console.error('Error details:', err);
     console.error('Error stack:', err.stack);
-    // Handle multer errors specifically
+    // Handle Cloudinary upload errors specifically
     if (err.code === 'LIMIT_FILE_SIZE') {
         return res.status(400).json({
             status: "error",
@@ -98,7 +96,7 @@ app.use((err, req, res, next) => {
             message: "Unexpected file field. Please check your form data.",
         });
     }
-    // Handle multer parsing errors
+    // Handle Cloudinary upload parsing errors
     if (err.message && err.message.includes('Unexpected end of form')) {
         return res.status(400).json({
             status: "error",

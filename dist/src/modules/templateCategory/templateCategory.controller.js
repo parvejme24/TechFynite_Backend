@@ -27,7 +27,7 @@ exports.getTemplateCategoryById = getTemplateCategoryById;
 const createTemplateCategory = async (req, res) => {
     try {
         const { title, slug } = req.body;
-        let imageUrl = req.file ? `/uploads/templateCategoryImage/${req.file.filename}` : undefined;
+        let imageUrl = req.file ? req.file.path : undefined;
         const category = await templateCategory_service_1.TemplateCategoryService.create({ title, slug, imageUrl });
         res.status(201).json(category);
     }
@@ -39,7 +39,7 @@ exports.createTemplateCategory = createTemplateCategory;
 const updateTemplateCategory = async (req, res) => {
     try {
         const { title, slug } = req.body;
-        let imageUrl = req.file ? `/uploads/templateCategoryImage/${req.file.filename}` : req.body.imageUrl;
+        let imageUrl = req.file ? req.file.path : req.body.imageUrl;
         const category = await templateCategory_service_1.TemplateCategoryService.update(req.params.id, { title, slug, imageUrl });
         res.json(category);
     }

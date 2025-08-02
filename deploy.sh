@@ -14,6 +14,14 @@ if ! vercel whoami &> /dev/null; then
     vercel login
 fi
 
+# Install dependencies
+echo "📦 Installing dependencies..."
+npm install
+
+# Generate Prisma client
+echo "🔧 Generating Prisma client..."
+npx prisma generate
+
 # Build the project
 echo "📦 Building project..."
 npm run build
@@ -23,4 +31,5 @@ echo "🚀 Deploying to Vercel..."
 vercel --prod
 
 echo "✅ Deployment completed!"
-echo "🌐 Your API is now live at: https://your-project.vercel.app" 
+echo "🌐 Your API is now live at: https://your-project.vercel.app"
+echo "📝 Don't forget to set up your environment variables in Vercel dashboard!" 

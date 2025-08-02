@@ -23,8 +23,7 @@ import path from 'path';
 
 const app: Application = express();
 
-// Serve uploads directory statically
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Static file serving removed - using Cloudinary for all file uploads
 
 // security middleware
 app.use(helmet());
@@ -86,7 +85,7 @@ app.use((err: any, req: any, res: any, next: any) => {
   console.error('Error details:', err);
   console.error('Error stack:', err.stack);
   
-  // Handle multer errors specifically
+  // Handle Cloudinary upload errors specifically
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({
       status: "error",
@@ -108,7 +107,7 @@ app.use((err: any, req: any, res: any, next: any) => {
     });
   }
   
-  // Handle multer parsing errors
+  // Handle Cloudinary upload parsing errors
   if (err.message && err.message.includes('Unexpected end of form')) {
     return res.status(400).json({
       status: "error",

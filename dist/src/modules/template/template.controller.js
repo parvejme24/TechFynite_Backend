@@ -23,17 +23,17 @@ function parseArrayField(field) {
 function getUploadedScreenshots(files) {
     if (!files || !files.screenshots)
         return [];
-    return files.screenshots.map((file) => `/uploads/templateScreenshots/${file.filename}`);
+    return files.screenshots.map((file) => file.path);
 }
 function getUploadedImage(files, fieldName) {
     if (!files || !files[fieldName])
         return undefined;
-    return `/uploads/templateImage/${files[fieldName][0].filename}`;
+    return files[fieldName][0].path;
 }
 function getUploadedFiles(files, fieldName) {
     if (!files || !files[fieldName])
         return [];
-    return files[fieldName].map((file) => `/uploads/${file.filename}`);
+    return files[fieldName].map((file) => file.path);
 }
 const getAllTemplates = async (req, res) => {
     try {

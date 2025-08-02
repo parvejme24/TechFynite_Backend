@@ -92,7 +92,7 @@ const createBlog = async (req, res) => {
         }
         let imageUrl = req.body.imageUrl;
         if (req.files && req.files.image && req.files.image[0]) {
-            imageUrl = `/uploads/blogThumbnail/${req.files.image[0].filename}`;
+            imageUrl = req.files.image[0].path;
         }
         const { title, categoryId, description, readingTime, content, slug, isPublished } = req.body;
         // Validate required fields
@@ -122,7 +122,7 @@ const createBlog = async (req, res) => {
             }
             parsedContent = rawContent.map((item, idx) => ({
                 ...item,
-                imageUrl: contentImages[idx] ? `/uploads/blogContentImage/${contentImages[idx].filename}` : item.imageUrl,
+                imageUrl: contentImages[idx] ? contentImages[idx].path : item.imageUrl,
                 description: ensureArray(item.description), // Handle content description as multiple paragraphs
                 order: item.order || idx
             }));
@@ -157,7 +157,7 @@ const updateBlog = async (req, res) => {
         }
         let imageUrl = req.body.imageUrl;
         if (req.files && req.files.image && req.files.image[0]) {
-            imageUrl = `/uploads/blogThumbnail/${req.files.image[0].filename}`;
+            imageUrl = req.files.image[0].path;
         }
         const { title, categoryId, description, readingTime, content, slug, isPublished } = req.body;
         // Handle description as multiple paragraphs
@@ -174,7 +174,7 @@ const updateBlog = async (req, res) => {
             }
             parsedContent = rawContent.map((item, idx) => ({
                 ...item,
-                imageUrl: contentImages[idx] ? `/uploads/blogContentImage/${contentImages[idx].filename}` : item.imageUrl,
+                imageUrl: contentImages[idx] ? contentImages[idx].path : item.imageUrl,
                 description: ensureArray(item.description), // Handle content description as multiple paragraphs
                 order: item.order || idx
             }));
