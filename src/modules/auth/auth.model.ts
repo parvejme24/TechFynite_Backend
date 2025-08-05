@@ -18,4 +18,13 @@ export const AuthModel = {
   updateByEmail: async (email: string, data: Partial<User>): Promise<User> => {
     return prisma.user.update({ where: { email }, data });
   },
+  findMany: async (where: any, options: any = {}): Promise<User[]> => {
+    return prisma.user.findMany({ where, ...options });
+  },
+  count: async (where: any = {}): Promise<number> => {
+    return prisma.user.count({ where });
+  },
+  delete: async (id: string): Promise<User> => {
+    return prisma.user.delete({ where: { id } });
+  },
 }; 

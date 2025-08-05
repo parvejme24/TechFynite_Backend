@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
   getAllBlogs,
   getBlogById,
@@ -13,35 +13,27 @@ import {
   getPopularBlogs,
   searchBlogs,
   togglePublishStatus,
-} from './blog.controller';
-import { 
-  uploadBlogFilesCloudinary
-} from '../../middlewares/cloudinary-upload';
-import { authMiddleware } from '../../middlewares/auth';
+} from "./blog.controller";
+import { uploadBlogFilesCloudinary } from "../../middlewares/cloudinary-upload";
+import { authMiddleware } from "../../middlewares/auth";
 
 const router = Router();
 
 // Public routes
-router.get('/blogs', getAllBlogs);
-router.get('/blogs/search', searchBlogs);
-router.get('/blogs/popular', getPopularBlogs);
-router.get('/blogs/slug/:slug', getBlogBySlug);
-router.get('/blogs/:id', getBlogById);
-router.get('/blogs/category/:categoryId', getBlogsByCategory);
-router.get('/blogs/author/:authorId', getBlogsByAuthor);
+router.get("/blogs", getAllBlogs);
+router.get("/blogs/search", searchBlogs);
+router.get("/blogs/popular", getPopularBlogs);
+router.get("/blogs/slug/:slug", getBlogBySlug);
+router.get("/blogs/:id", getBlogById);
+router.get("/blogs/category/:categoryId", getBlogsByCategory);
+router.get("/blogs/author/:authorId", getBlogsByAuthor);
 
 // Protected routes (require authentication)
-router.post('/blogs', authMiddleware, 
-  uploadBlogFilesCloudinary,
-  createBlog
-);
-router.put('/blogs/:id', authMiddleware, 
-  uploadBlogFilesCloudinary,
-  updateBlog
-);
-router.delete('/blogs/:id', authMiddleware, deleteBlog);
-router.post('/blogs/:id/like', authMiddleware, likeBlog);
-router.post('/blogs/:id/unlike', authMiddleware, unlikeBlog);
-router.patch('/blogs/:id/publish', authMiddleware, togglePublishStatus);
+router.post("/blogs", authMiddleware, uploadBlogFilesCloudinary, createBlog);
+router.put("/blogs/:id", authMiddleware, uploadBlogFilesCloudinary, updateBlog);
+router.delete("/blogs/:id", authMiddleware, deleteBlog);
+router.post("/blogs/:id/like", authMiddleware, likeBlog);
+router.post("/blogs/:id/unlike", authMiddleware, unlikeBlog);
+router.patch("/blogs/:id/publish", authMiddleware, togglePublishStatus);
 
 export default router;

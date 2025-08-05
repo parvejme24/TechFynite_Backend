@@ -19,6 +19,7 @@ import { pricingRoutes } from "./modules/pricing";
 import { checkoutRoutes } from "./modules/checkout";
 import { lemonsqueezyWebhookRoutes } from "./modules/webhook";
 import { licenseRoutes } from "./modules/license";
+import subscriptionRoutes from "./modules/subscription/subscription.routes";
 import path from 'path';
 
 const app: Application = express();
@@ -79,6 +80,7 @@ app.use("/api/v1", pricingRoutes);
 app.use("/api/v1", checkoutRoutes);
 app.use("/api/v1", lemonsqueezyWebhookRoutes);
 app.use("/api/v1", licenseRoutes);
+app.use("/api/v1/subscriptions", subscriptionRoutes);
 
 // error handling middleware
 app.use((err: any, req: any, res: any, next: any) => {

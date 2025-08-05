@@ -2,12 +2,14 @@ import { Request, Response } from 'express';
 import { ContactService } from './contact.service';
 import { ContactFormRequest, UpdateContactStatusRequest, UpdateContactRequest, ReplyEmailRequest } from './contact.types';
 import { sendEmail } from '../auth/auth.utils';
+import { UserRole } from '../../generated/prisma';
 
 // Extend Request to include user property
 interface AuthenticatedRequest extends Request {
   user?: {
-    id: string;
-    role: string;
+    userId: string;
+    email: string;
+    role: UserRole;
   };
 }
 
@@ -18,7 +20,7 @@ interface AuthenticatedRequest extends Request {
 export const addNewContact = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const data: ContactFormRequest = req.body;
-    const userId = req.user?.id; // Add user ID if logged in, otherwise null
+    const userId = req.user?.userId; // Add user ID if logged in, otherwise null
     
     const contact = await ContactService.create(data, userId);
     res.status(201).json({ 
@@ -67,7 +69,7 @@ export const getAllContacts = async (req: AuthenticatedRequest, res: Response) =
  */
 export const getUserContacts = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({ 
         success: false, 
@@ -96,7 +98,7 @@ export const getUserContacts = async (req: AuthenticatedRequest, res: Response) 
 export const getContactById = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     const userRole = req.user?.role;
     
     const contact = await ContactService.getById(id);
@@ -135,7 +137,7 @@ export const getContactById = async (req: AuthenticatedRequest, res: Response) =
 export const deleteContact = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     const userRole = req.user?.role;
 
     // Check if contact exists
@@ -253,7 +255,7 @@ Budget: ${contact.budget}
     );
 
     // Add reply to database
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     if (userId) {
       await ContactService.addReply(id, userId, subject, message);
     }
@@ -316,7 +318,7 @@ export const addContactReply = async (req: AuthenticatedRequest, res: Response) 
   try {
     const { id } = req.params;
     const { subject, message } = req.body;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!userId) {
       return res.status(401).json({

@@ -1,5 +1,8 @@
 import mailchimp from "@mailchimp/mailchimp_marketing";
 import axios from 'axios';
+import { PrismaClient } from '../../generated/prisma';
+
+const prisma = new PrismaClient();
 
 mailchimp.setConfig({
   apiKey: process.env.MAILCHIMP_API_KEY,
@@ -36,6 +39,110 @@ interface SubscriberData {
 }
 
 export const NewsletterService = {
+  // Database-based newsletter subscription
+  subscribeToDatabase: async (email: string) => {
+    try {
+      // Check if email already exists
+      const existingSubscriber = await prisma.newsletter.findUnique({
+        where: { email }
+      });
+
+      if (existingSubscriber) {
+        if (existingSubscriber.isActive) {
+          throw new Error("Email already subscribed to newsletter");
+        } else {
+          // Reactivate subscription
+          await prisma.newsletter.update({
+            where: { email },
+            data: { isActive: true }
+          });
+          return { message: "Subscription reactivated successfully" };
+        }
+      }
+
+      // Create new subscription
+      await prisma.newsletter.create({
+        data: {
+          email,
+          isActive: true
+        }
+      });
+
+      return { message: "Subscribed successfully" };
+    } catch (error: any) {
+      if (error.code === 'P2002') {
+        throw new Error("Email already subscribed to newsletter");
+      }
+      throw new Error("Database error: " + error.message);
+    }
+  },
+
+  // Get all subscribers from database
+  getAllSubscribersFromDatabase: async () => {
+    try {
+      const subscribers = await prisma.newsletter.findMany({
+        where: { isActive: true },
+        orderBy: { createdAt: 'desc' }
+      });
+
+      return subscribers.map(subscriber => ({
+        id: subscriber.id,
+        email: subscriber.email,
+        isActive: subscriber.isActive,
+        subscribedAt: subscriber.createdAt,
+        lastChanged: subscriber.updatedAt
+      }));
+    } catch (error: any) {
+      throw new Error("Failed to fetch subscribers: " + error.message);
+    }
+  },
+
+  // Get subscriber count from database
+  getSubscriberCountFromDatabase: async () => {
+    try {
+      const total = await prisma.newsletter.count();
+      const active = await prisma.newsletter.count({
+        where: { isActive: true }
+      });
+      const inactive = total - active;
+
+      return {
+        total,
+        subscribed: active,
+        unsubscribed: inactive
+      };
+    } catch (error: any) {
+      throw new Error("Failed to fetch subscriber count: " + error.message);
+    }
+  },
+
+  // Unsubscribe from database
+  unsubscribeFromDatabase: async (email: string) => {
+    try {
+      const subscriber = await prisma.newsletter.findUnique({
+        where: { email }
+      });
+
+      if (!subscriber) {
+        throw new Error("Email not found in newsletter subscribers");
+      }
+
+      if (!subscriber.isActive) {
+        throw new Error("Email is already unsubscribed");
+      }
+
+      await prisma.newsletter.update({
+        where: { email },
+        data: { isActive: false }
+      });
+
+      return { message: "Unsubscribed successfully" };
+    } catch (error: any) {
+      throw new Error("Failed to unsubscribe: " + error.message);
+    }
+  },
+
+  // Original Mailchimp-based methods
   subscribe: async (email: string) => {
     try {
       await mailchimp.lists.addListMember(process.env.MAILCHIMP_AUDIENCE_ID!, {

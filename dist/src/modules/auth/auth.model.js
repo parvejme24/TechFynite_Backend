@@ -19,4 +19,13 @@ exports.AuthModel = {
     updateByEmail: async (email, data) => {
         return prisma.user.update({ where: { email }, data });
     },
+    findMany: async (where, options = {}) => {
+        return prisma.user.findMany({ where, ...options });
+    },
+    count: async (where = {}) => {
+        return prisma.user.count({ where });
+    },
+    delete: async (id) => {
+        return prisma.user.delete({ where: { id } });
+    },
 };

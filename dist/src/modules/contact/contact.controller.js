@@ -10,7 +10,7 @@ const auth_utils_1 = require("../auth/auth.utils");
 const addNewContact = async (req, res) => {
     try {
         const data = req.body;
-        const userId = req.user?.id; // Add user ID if logged in, otherwise null
+        const userId = req.user?.userId; // Add user ID if logged in, otherwise null
         const contact = await contact_service_1.ContactService.create(data, userId);
         res.status(201).json({
             success: true,
@@ -60,7 +60,7 @@ exports.getAllContacts = getAllContacts;
  */
 const getUserContacts = async (req, res) => {
     try {
-        const userId = req.user?.id;
+        const userId = req.user?.userId;
         if (!userId) {
             return res.status(401).json({
                 success: false,
@@ -89,7 +89,7 @@ exports.getUserContacts = getUserContacts;
 const getContactById = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user?.id;
+        const userId = req.user?.userId;
         const userRole = req.user?.role;
         const contact = await contact_service_1.ContactService.getById(id);
         if (!contact) {
@@ -125,7 +125,7 @@ exports.getContactById = getContactById;
 const deleteContact = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user?.id;
+        const userId = req.user?.userId;
         const userRole = req.user?.role;
         // Check if contact exists
         const contact = await contact_service_1.ContactService.getById(id);
@@ -231,7 +231,7 @@ Budget: ${contact.budget}
     `;
         await (0, auth_utils_1.sendEmail)(contact.email, `Re: ${subject}`, emailContent);
         // Add reply to database
-        const userId = req.user?.id;
+        const userId = req.user?.userId;
         if (userId) {
             await contact_service_1.ContactService.addReply(id, userId, subject, message);
         }
@@ -287,7 +287,7 @@ const addContactReply = async (req, res) => {
     try {
         const { id } = req.params;
         const { subject, message } = req.body;
-        const userId = req.user?.id;
+        const userId = req.user?.userId;
         if (!userId) {
             return res.status(401).json({
                 success: false,

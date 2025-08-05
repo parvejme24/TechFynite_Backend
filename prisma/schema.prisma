@@ -34,11 +34,13 @@ model User {
   notifications  Notification[]    @relation("UserNotifications")
   orders         OrderInvoice[]    @relation("UserOrders")
   purchases      Template[]        @relation("UserPurchases")
+
   reviews        BlogReview[]      @relation("UserReviews")
   reviewReplies  BlogReviewReply[] @relation("AdminReplies")
   contacts       Contact[]         @relation("UserContacts")
   contactReplies ContactReply[]    @relation("UserContactReplies")
   licenses       License[]         @relation("UserLicenses")
+  subscriptions  Subscription[]    @relation("UserSubscriptions")
 
   @@index([email])
   @@index([role])
@@ -302,19 +304,19 @@ model ContactReply {
 }
 
 model License {
-  id          String   @id @default(uuid())
-  licenseKey  String   @unique // LemonSqueezy License Key
-  templateId  String
-  userId      String
-  orderId     String   @unique // LemonSqueezy Order ID
-  isValid     Boolean  @default(true)
-  expiresAt   DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String    @id @default(uuid())
+  licenseKey String    @unique // LemonSqueezy License Key
+  templateId String
+  userId     String
+  orderId    String    @unique // LemonSqueezy Order ID
+  isValid    Boolean   @default(true)
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   // Relations
-  template Template @relation("TemplateLicenses", fields: [templateId], references: [id], onDelete: Cascade)
-  user     User     @relation("UserLicenses", fields: [userId], references: [id], onDelete: Cascade)
+  template Template     @relation("TemplateLicenses", fields: [templateId], references: [id], onDelete: Cascade)
+  user     User         @relation("UserLicenses", fields: [userId], references: [id], onDelete: Cascade)
   order    OrderInvoice @relation("OrderLicense", fields: [orderId], references: [orderId], onDelete: Cascade)
 
   @@index([licenseKey])
@@ -339,6 +341,85 @@ model Pricing {
   @@index([duration])
   @@index([recommended])
   @@map("pricing")
+}
+
+// Subscription Model for LemonSqueezy subscription management
+model Subscription {
+  id                    String              @id @default(uuid())
+  userId                String
+  lemonsqueezyStoreId   String              // LemonSqueezy Store ID
+  lemonsqueezyProductId String              // LemonSqueezy Product ID
+  lemonsqueezyVariantId String              // LemonSqueezy Variant ID
+  lemonsqueezyOrderId   String              // LemonSqueezy Order ID
+  lemonsqueezyOrderItemId String            // LemonSqueezy Order Item ID
+  subscriptionId        String              @unique // LemonSqueezy Subscription ID
+  status                SubscriptionStatus  @default(ACTIVE)
+  planName              String              // e.g., "Pro", "Enterprise"
+  planPrice             Float               // Monthly/Yearly price
+  billingCycle          BillingCycle        // MONTHLY, YEARLY
+  currentPeriodStart    DateTime
+  currentPeriodEnd      DateTime
+  trialEndsAt           DateTime?
+  cancelAtPeriodEnd     Boolean             @default(false)
+  canceledAt            DateTime?
+  endedAt               DateTime?
+  nextBillingDate       DateTime?
+  totalRevenue          Float               @default(0.0)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  user                  User                @relation("UserSubscriptions", fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionFeatures  SubscriptionFeature[] @relation("SubscriptionFeatures")
+
+  @@index([userId])
+  @@index([subscriptionId])
+  @@index([currentPeriodEnd])
+  @@index([lemonsqueezyProductId])
+  @@map("subscriptions")
+}
+
+// Subscription Features Model for feature access control
+model SubscriptionFeature {
+  id            String      @id @default(uuid())
+  subscriptionId String
+  featureName   String      // e.g., "unlimited_templates", "priority_support"
+  featureValue  String      // e.g., "true", "100", "unlimited"
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  subscription  Subscription @relation("SubscriptionFeatures", fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId])
+  @@index([featureName])
+  @@map("subscription_features")
+}
+
+// Subscription Plans Model for managing available plans
+model SubscriptionPlan {
+  id                    String      @id @default(uuid())
+  name                  String      // e.g., "Free", "Pro", "Enterprise"
+  slug                  String      @unique
+  description           String?
+  lemonsqueezyProductId String      @unique
+  lemonsqueezyVariantId String      @unique
+  price                 Float
+  billingCycle          BillingCycle
+  isActive              Boolean     @default(true)
+  isPopular             Boolean     @default(false)
+  features              Json[]      // Array of feature objects
+  maxTemplates          Int?        // Template download limit
+  maxDownloads          Int?        // Download limit
+  prioritySupport       Boolean     @default(false)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  @@index([slug])
+  @@index([isActive])
+  @@index([lemonsqueezyProductId])
+  @@map("subscription_plans")
 }
 
 enum Duration {
@@ -390,4 +471,18 @@ enum ContactStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+  TRIAL
+  EXPIRED
+}
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
 }
