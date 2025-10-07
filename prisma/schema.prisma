@@ -8,32 +8,38 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id            String    @id @default(uuid())
-  displayName   String
-  email         String    @unique
-  password      String
-  photoUrl      String?
-  designation   String?
-  role          UserRole  @default(USER)
-  phone         String?
-  country       String?
-  city          String?
-  stateOrRegion String?
-  postCode      String?
-  balance       Float     @default(0.0)
-  isVerified    Boolean?  @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  otpCode       String?
-  otpExpiresAt  DateTime?
-  refreshToken  String?
+enum OtpPurpose {
+  REGISTER
+  LOGIN
+  PASSWORD_RESET
+}
 
-  blogLikes      BlogLike[]        @relation("UserLikes")
-  blogs          Blog[]            @relation("BlogAuthor")
-  notifications  Notification[]    @relation("UserNotifications")
-  orders         OrderInvoice[]    @relation("UserOrders")
-  purchases      Template[]        @relation("UserPurchases")
+model User {
+  id        String   @id @default(uuid())
+  fullName  Json
+  email     String   @unique
+  password  String
+  role      UserRole @default(USER)
+  isBanned  Boolean  @default(false)
+  isTrashed Boolean  @default(false)
+
+  // otp related fields
+  otpCode      String?
+  otpPurpose   OtpPurpose?
+  otpExpiresAt DateTime?
+  otpVerified  Boolean     @default(false)
+
+  // Account management
+  lastLoginAt          DateTime?
+  isDeletedPermanently Boolean   @default(false)
+  deletedAt            DateTime?
+  deletedBy            String?
+
+  blogLikes     BlogLike[]     @relation("UserLikes")
+  blogs         Blog[]         @relation("BlogAuthor")
+  notifications Notification[] @relation("UserNotifications")
+  orders        OrderInvoice[] @relation("UserOrders")
+  purchases     Template[]     @relation("UserPurchases")
 
   reviews        BlogReview[]      @relation("UserReviews")
   reviewReplies  BlogReviewReply[] @relation("AdminReplies")
@@ -42,9 +48,29 @@ model User {
   licenses       License[]         @relation("UserLicenses")
   subscriptions  Subscription[]    @relation("UserSubscriptions")
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([email])
   @@index([role])
   @@map("users")
+}
+
+model UserProfile {
+  id            String  @id @default(uuid())
+  userId        String
+  avatarUrl     String?
+  coverImageUrl String?
+  designation   String?
+  phone         String?
+  country       String?
+  city          String?
+  stateOrRegion String?
+  postCode      String?
+  balance       Float   @default(0.0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model TemplateCategory {
@@ -115,7 +141,7 @@ model Blog {
   title       String
   categoryId  String
   imageUrl    String?
-  description String[]
+  description Json
   likes       Int           @default(0)
   readingTime Float
   authorId    String
@@ -143,7 +169,7 @@ model BlogContent {
   blogId      String
   blog        Blog     @relation("BlogContent", fields: [blogId], references: [id], onDelete: Cascade)
   heading     String
-  description String[]
+  description Json
   imageUrl    String?
   order       Int      @default(0) // For ordering content sections
   createdAt   DateTime @default(now())
@@ -345,32 +371,32 @@ model Pricing {
 
 // Subscription Model for LemonSqueezy subscription management
 model Subscription {
-  id                    String              @id @default(uuid())
-  userId                String
-  lemonsqueezyStoreId   String              // LemonSqueezy Store ID
-  lemonsqueezyProductId String              // LemonSqueezy Product ID
-  lemonsqueezyVariantId String              // LemonSqueezy Variant ID
-  lemonsqueezyOrderId   String              // LemonSqueezy Order ID
-  lemonsqueezyOrderItemId String            // LemonSqueezy Order Item ID
-  subscriptionId        String              @unique // LemonSqueezy Subscription ID
-  status                SubscriptionStatus  @default(ACTIVE)
-  planName              String              // e.g., "Pro", "Enterprise"
-  planPrice             Float               // Monthly/Yearly price
-  billingCycle          BillingCycle        // MONTHLY, YEARLY
-  currentPeriodStart    DateTime
-  currentPeriodEnd      DateTime
-  trialEndsAt           DateTime?
-  cancelAtPeriodEnd     Boolean             @default(false)
-  canceledAt            DateTime?
-  endedAt               DateTime?
-  nextBillingDate       DateTime?
-  totalRevenue          Float               @default(0.0)
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
+  id                      String             @id @default(uuid())
+  userId                  String
+  lemonsqueezyStoreId     String // LemonSqueezy Store ID
+  lemonsqueezyProductId   String // LemonSqueezy Product ID
+  lemonsqueezyVariantId   String // LemonSqueezy Variant ID
+  lemonsqueezyOrderId     String // LemonSqueezy Order ID
+  lemonsqueezyOrderItemId String // LemonSqueezy Order Item ID
+  subscriptionId          String             @unique // LemonSqueezy Subscription ID
+  status                  SubscriptionStatus @default(ACTIVE)
+  planName                String // e.g., "Pro", "Enterprise"
+  planPrice               Float // Monthly/Yearly price
+  billingCycle            BillingCycle // MONTHLY, YEARLY
+  currentPeriodStart      DateTime
+  currentPeriodEnd        DateTime
+  trialEndsAt             DateTime?
+  cancelAtPeriodEnd       Boolean            @default(false)
+  canceledAt              DateTime?
+  endedAt                 DateTime?
+  nextBillingDate         DateTime?
+  totalRevenue            Float              @default(0.0)
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
 
   // Relations
-  user                  User                @relation("UserSubscriptions", fields: [userId], references: [id], onDelete: Cascade)
-  subscriptionFeatures  SubscriptionFeature[] @relation("SubscriptionFeatures")
+  user                 User                  @relation("UserSubscriptions", fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionFeatures SubscriptionFeature[] @relation("SubscriptionFeatures")
 
   @@index([userId])
   @@index([subscriptionId])
@@ -381,16 +407,16 @@ model Subscription {
 
 // Subscription Features Model for feature access control
 model SubscriptionFeature {
-  id            String      @id @default(uuid())
+  id             String   @id @default(uuid())
   subscriptionId String
-  featureName   String      // e.g., "unlimited_templates", "priority_support"
-  featureValue  String      // e.g., "true", "100", "unlimited"
-  isActive      Boolean     @default(true)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  featureName    String // e.g., "unlimited_templates", "priority_support"
+  featureValue   String // e.g., "true", "100", "unlimited"
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Relations
-  subscription  Subscription @relation("SubscriptionFeatures", fields: [subscriptionId], references: [id], onDelete: Cascade)
+  subscription Subscription @relation("SubscriptionFeatures", fields: [subscriptionId], references: [id], onDelete: Cascade)
 
   @@index([subscriptionId])
   @@index([featureName])
@@ -399,22 +425,22 @@ model SubscriptionFeature {
 
 // Subscription Plans Model for managing available plans
 model SubscriptionPlan {
-  id                    String      @id @default(uuid())
-  name                  String      // e.g., "Free", "Pro", "Enterprise"
-  slug                  String      @unique
+  id                    String       @id @default(uuid())
+  name                  String // e.g., "Free", "Pro", "Enterprise"
+  slug                  String       @unique
   description           String?
-  lemonsqueezyProductId String      @unique
-  lemonsqueezyVariantId String      @unique
+  lemonsqueezyProductId String       @unique
+  lemonsqueezyVariantId String       @unique
   price                 Float
   billingCycle          BillingCycle
-  isActive              Boolean     @default(true)
-  isPopular             Boolean     @default(false)
-  features              Json[]      // Array of feature objects
-  maxTemplates          Int?        // Template download limit
-  maxDownloads          Int?        // Download limit
-  prioritySupport       Boolean     @default(false)
-  createdAt             DateTime    @default(now())
-  updatedAt             DateTime    @updatedAt
+  isActive              Boolean      @default(true)
+  isPopular             Boolean      @default(false)
+  features              Json[] // Array of feature objects
+  maxTemplates          Int? // Template download limit
+  maxDownloads          Int? // Download limit
+  prioritySupport       Boolean      @default(false)
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
 
   @@index([slug])
   @@index([isActive])

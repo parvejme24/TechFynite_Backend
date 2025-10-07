@@ -58,7 +58,7 @@ router.put('/upload-photo', authenticate, uploadUserProfileCloudinary, uploadPro
 
 // Admin routes (require admin role)
 router.get('/users', authenticate, requireAdmin, validateGetUsers, getAllUsers);
-router.post('/admin/users', authenticate, requireAdmin, validateCreateAdminUser, register);
+// router.post('/admin/users', authenticate, requireAdmin, validateCreateAdminUser, register);
 router.put('/admin/users/:userId/role', authenticate, requireAdmin, validateUpdateUserRole, updateUserRole);
 router.put('/admin/users/:userId/status', authenticate, requireAdmin, validateUpdateUserStatus, updateUserStatus);
 router.delete('/admin/users/:userId', authenticate, requireAdmin, validateUserId, deleteUser);
