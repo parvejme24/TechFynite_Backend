@@ -1,0 +1,398 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum OtpPurpose {
+  REGISTRATION
+  PASSWORD_RESET
+}
+
+model User {
+  id       String   @id @default(uuid())
+  fullName String
+  email    String   @unique
+  password String?
+  role     UserRole @default(USER)
+
+  isBanned             Boolean @default(false)
+  isTrashed            Boolean @default(false)
+  isDeletedPermanently Boolean @default(false)
+
+  // NextAuth related fields
+  nextAuthSecret    String? // Store NextAuth session secret
+  nextAuthExpiresAt DateTime? // Session expiration time
+  isLoggedIn        Boolean   @default(false) // Track login status
+  lastLoginAt       DateTime? // Last login timestamp
+  provider          String? // OAuth provider (google, etc.)
+  providerId        String? // Provider user ID
+
+  // otp related fields
+  otpCode      String?
+  otpPurpose   OtpPurpose?
+  otpExpiresAt DateTime?
+  otpVerified  Boolean     @default(false)
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  contacts       Contact[]      @relation("UserContacts")
+  contactReplies ContactReply[] @relation("UserContactReplies")
+  profile        UserProfile?
+
+  // Blog relations
+  blogs        Blog[]            @relation("BlogAuthor")
+  blogReviews  BlogReview[]      @relation("UserReviews")
+  blogLikes    BlogLike[]        @relation("UserLikes")
+  adminReplies BlogReviewReply[] @relation("AdminReplies")
+
+  // Template relations
+  purchasedTemplates Template[]     @relation("UserPurchases")
+  orders             OrderInvoice[]
+  licenses           License[]
+
+  // Newsletter relations
+  newsletterSubscriptions Newsletter[] @relation("UserNewsletterSubscriptions")
+
+  @@index([email])
+  @@index([role])
+  @@index([provider])
+  @@index([isLoggedIn])
+  @@map("users")
+}
+
+model UserProfile {
+  id            String  @id @default(uuid())
+  userId        String  @unique
+  avatarUrl     String?
+  coverImageUrl String?
+  designation   String?
+  phone         String?
+  country       String?
+  city          String?
+  stateOrRegion String?
+  postCode      String?
+  balance       Float   @default(0.0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// **********************************
+// template model
+// **********************************
+model TemplateCategory {
+  id            String     @id @default(uuid())
+  title         String
+  slug          String?    @unique
+  image         String?
+  templateCount Int        @default(0)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  templates     Template[] @relation("CategoryTemplates")
+
+  @@map("template_categories")
+}
+
+model Template {
+  id                    String   @id @default(uuid())
+  title                 String
+  price                 Float
+  lemonsqueezyProductId String? // LS product ID
+  lemonsqueezyVariantId String? // LS variant ID (Single license / Extended license)
+  lemonsqueezyPermalink String? // LS permalink (for license validation)
+  imageUrl              String?
+  screenshots           String[] // Preview screenshots
+  previewLink           String? // Live preview site
+  sourceFiles           String[] // Downloadable files (used in delivery)
+  links                 Link[] @relation("TemplateLinks")
+  shortDescription      String
+  description           String[] // Full details
+  whatsIncluded         String[]
+  keyFeatures           Json[] // Array of { title, description }
+  version               Float
+  pages                 Int      @default(1)
+  downloads             Int      @default(0)
+  totalPurchase         Int      @default(0)
+  categoryId            String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  checkoutUrl String?
+
+  category    TemplateCategory @relation("CategoryTemplates", fields: [categoryId], references: [id])
+  orders      OrderInvoice[]   @relation("TemplateOrders")
+  purchasedBy User[]           @relation("UserPurchases")
+  licenses    License[]        @relation("TemplateLicenses")
+
+  @@index([categoryId])
+  @@index([createdAt])
+  @@map("templates")
+}
+
+model Link {
+  id         String @id @default(uuid())
+  templateId String
+  linkTitle1 String
+  linkUrl1   String
+  linkTitle2 String
+  linkUrl2   String
+  linkTitle3 String
+  linkUrl3   String
+
+  template Template @relation("TemplateLinks", fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("links")
+}
+
+// **********************************
+// Order and License models for LemonSqueezy
+// **********************************
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+enum LicenseType {
+  SINGLE
+  EXTENDED
+}
+
+model OrderInvoice {
+  id                    String      @id @default(uuid())
+  userId                String? // Guest checkout allowed
+  templateId            String
+  lemonsqueezyOrderId   String      @unique
+  lemonsqueezyInvoiceId String?
+  status                OrderStatus @default(PENDING)
+  totalAmount           Float
+  currency              String      @default("USD")
+  licenseType           LicenseType
+  paymentMethod         String?
+  customerEmail         String
+  customerName          String?
+  billingAddress        Json?
+  downloadLinks         String[]
+  expiresAt             DateTime?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  template Template  @relation("TemplateOrders", fields: [templateId], references: [id], onDelete: Cascade)
+  licenses License[]
+
+  @@index([userId])
+  @@index([templateId])
+  @@index([lemonsqueezyOrderId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("order_invoices")
+}
+
+model License {
+  id                  String      @id @default(uuid())
+  orderId             String?
+  templateId          String
+  userId              String?
+  licenseType         LicenseType
+  licenseKey          String      @unique
+  activationLimit     Int?
+  lemonsqueezyOrderId String
+  isActive            Boolean     @default(true)
+  maxUsage            Int?
+  usedCount           Int         @default(0)
+  expiresAt           DateTime? // license মেয়াদ শেষ হবার তারিখ
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  order    OrderInvoice? @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  template Template      @relation("TemplateLicenses", fields: [templateId], references: [id], onDelete: Cascade)
+  user     User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([templateId])
+  @@index([licenseKey])
+  @@index([isActive])
+  @@index([lemonsqueezyOrderId])
+  @@map("licenses")
+}
+
+// *******************************
+// blog model
+// *******************************
+model BlogCategory {
+  id        String   @id @default(uuid())
+  title     String
+  imageUrl  String?
+  blogCount Int      @default(0)
+  slug      String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  blogs     Blog[]   @relation("CategoryBlogs")
+
+  @@index([slug])
+  @@index([createdAt])
+  @@map("blog_categories")
+}
+
+model Blog {
+  id          String       @id @default(uuid())
+  title       String
+  categoryId  String
+  imageUrl    String?
+  description Json
+  likes       Int          @default(0)
+  readingTime Float
+  authorId    String
+  slug        String?      @unique // SEO-friendly URL
+  isPublished Boolean      @default(true) // Draft/Published status
+  viewCount   Int          @default(0) // Track blog views
+  content     Json?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  blogLikes   BlogLike[]   @relation("BlogLikes")
+  reviews     BlogReview[] @relation("BlogReviews")
+  author      User         @relation("BlogAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  category    BlogCategory @relation("CategoryBlogs", fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([categoryId])
+  @@index([authorId])
+  @@index([createdAt])
+  @@index([isPublished])
+  @@index([slug])
+  @@map("blogs")
+}
+
+model BlogReview {
+  id          String            @id @default(uuid())
+  blogId      String
+  userId      String?
+  fullName    String
+  email       String
+  photoUrl    String?
+  commentText String
+  rating      Int?              @default(5) // Optional rating (1-5)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  blog        Blog              @relation("BlogReviews", fields: [blogId], references: [id], onDelete: Cascade)
+  user        User?             @relation("UserReviews", fields: [userId], references: [id], onDelete: Cascade)
+  replies     BlogReviewReply[] @relation("ReviewReplies")
+
+  @@index([blogId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("blog_reviews")
+}
+
+model BlogReviewReply {
+  id        String     @id @default(uuid())
+  reviewId  String
+  adminId   String
+  replyText String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  review    BlogReview @relation("ReviewReplies", fields: [reviewId], references: [id], onDelete: Cascade)
+  admin     User       @relation("AdminReplies", fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId])
+  @@index([adminId])
+  @@index([createdAt])
+  @@map("blog_review_replies")
+}
+
+model BlogLike {
+  id        String   @id @default(uuid())
+  blogId    String
+  userId    String
+  createdAt DateTime @default(now())
+  blog      Blog     @relation("BlogLikes", fields: [blogId], references: [id], onDelete: Cascade)
+  user      User     @relation("UserLikes", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([blogId, userId])
+  @@index([blogId])
+  @@index([userId])
+  @@map("blog_likes")
+}
+
+// **********************************
+// comtact model for contact form
+// **********************************
+
+model Contact {
+  id              String  @id @default(uuid())
+  projectDetails  String
+  budget          String
+  fullName        String
+  email           String
+  companyName     String
+  serviceRequired String  @map("serviceRequred")
+  userId          String?
+
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  user      User?          @relation("UserContacts", fields: [userId], references: [id])
+  replies   ContactReply[] @relation("ContactReplies")
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("contacts")
+}
+
+model ContactReply {
+  id        String   @id @default(uuid())
+  subject   String
+  message   String
+  contactId String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  contact Contact @relation("ContactReplies", fields: [contactId], references: [id], onDelete: Cascade)
+  user    User    @relation("UserContactReplies", fields: [userId], references: [id])
+
+  @@index([contactId])
+  @@index([userId])
+  @@map("contact_replies")
+}
+
+// **********************************
+// newsletter model
+// **********************************
+
+model Newsletter {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  userId    String? // Link to user account if subscribed by registered user
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User? @relation("UserNewsletterSubscriptions", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@index([isActive])
+  @@index([userId])
+  @@map("newsletters")
+}
