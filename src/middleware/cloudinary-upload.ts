@@ -1,5 +1,4 @@
 import multer from "multer";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
 import { v2 as cloudinary } from "cloudinary";
 import { CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_URL } from "../config/secret";
 
@@ -103,66 +102,8 @@ export const debugCloudinaryConfig = () => {
   console.log("=============================");
 };
 
-// Create Cloudinary storage instance (lazy initialization)
-let cloudinaryStorage: any = null;
-
-const getCloudinaryStorage = () => {
-  if (cloudinaryStorage) {
-    return cloudinaryStorage;
-  }
-
-  try {
-    console.log("Creating new Cloudinary instance for storage...");
-    
-    // Create a fresh Cloudinary instance
-    const { v2: freshCloudinary } = require("cloudinary");
-    
-    // Configure the fresh instance
-    if (CLOUDINARY_URL) {
-      freshCloudinary.config(CLOUDINARY_URL as any);
-      freshCloudinary.config({ secure: true });
-    } else {
-      freshCloudinary.config({
-        cloud_name: CLOUDINARY_CLOUD_NAME,
-        api_key: CLOUDINARY_API_KEY,
-        api_secret: CLOUDINARY_API_SECRET,
-        secure: true,
-      });
-    }
-
-    // Wait for uploader to be available
-    let attempts = 0;
-    const maxAttempts = 10;
-    
-    while (!freshCloudinary.uploader && attempts < maxAttempts) {
-      console.log(`Waiting for Cloudinary uploader... attempt ${attempts + 1}`);
-      // Small delay to allow initialization
-      require('child_process').execSync('timeout /t 0.1 /nobreak >nul 2>&1', { shell: true });
-      attempts++;
-    }
-
-    if (!freshCloudinary.uploader) {
-      throw new Error("Cloudinary uploader not available after multiple attempts");
-    }
-
-    console.log("Fresh Cloudinary uploader available:", !!freshCloudinary.uploader);
-
-    cloudinaryStorage = new CloudinaryStorage({
-      cloudinary: freshCloudinary as any, // Use fresh instance
-      params: {
-        folder: "techfynite/uploads",
-        allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
-        transformation: [{ width: 800, height: 600, crop: "limit", quality: "auto" }],
-      } as any, // Cast to any for params
-    });
-    
-    console.log("Cloudinary storage created successfully with fresh instance");
-    return cloudinaryStorage;
-  } catch (error) {
-    console.error("Failed to create Cloudinary storage:", error);
-    return null;
-  }
-};
+// Note: We're using memory storage with manual Cloudinary uploads
+// No need for CloudinaryStorage anymore
 
 // File filter for images only
 const imageFilter = (req: any, file: any, cb: any) => {
@@ -318,15 +259,7 @@ export const handleUploadError = (error: any, req: any, res: any, next: any) => 
     });
   }
 
-  // Check if cloudinaryStorage is available
-  const storage = getCloudinaryStorage();
-  if (!storage) {
-    return res.status(503).json({
-      success: false,
-      message: "Cloudinary storage not available. Please check your configuration.",
-      error: "Cloudinary storage initialization failed"
-    });
-  }
+  // Note: We're using memory storage, no need to check CloudinaryStorage
   if (error instanceof multer.MulterError) {
     if (error.code === "LIMIT_FILE_SIZE") {
       return res.status(400).json({

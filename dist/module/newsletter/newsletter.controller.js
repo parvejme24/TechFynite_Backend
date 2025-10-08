@@ -6,7 +6,8 @@ const newsletterService = new newsletter_service_1.NewsletterService();
 const subscribeNewsletter = async (req, res) => {
     try {
         const { email } = req.body;
-        const subscriber = await newsletterService.subscribeNewsletter(email);
+        const userId = req.user?.id;
+        const subscriber = await newsletterService.subscribeNewsletter(email, userId);
         return res.status(201).json({
             success: true,
             message: "Successfully subscribed to newsletter",

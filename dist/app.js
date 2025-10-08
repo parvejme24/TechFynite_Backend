@@ -12,7 +12,7 @@ const morgan_1 = __importDefault(require("morgan"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-app.use((0, morgan_1.default)('dev'));
+app.use((0, morgan_1.default)("dev"));
 app.use((req, res, next) => {
     console.log(`📝 ${new Date().toISOString()} - ${req.method} ${req.url}`);
     next();
@@ -30,13 +30,17 @@ app.use((0, cors_1.default)({
         "http://localhost:3000",
         "http://localhost:3001",
         "http://localhost:5174",
+        "https://tf-f-ts.vercel.app",
+        "https://techfynite.vercel.app",
+        "https://www.techfynite.com",
+        "https://www.techfynite.org",
     ],
     credentials: true,
 }));
 app.use(express_1.default.json({ limit: "10mb" }));
-app.use(express_1.default.urlencoded({ extended: true }));
+app.use(express_1.default.urlencoded({ extended: true, limit: "10mb" }));
 const routes_1 = __importDefault(require("./routes"));
-app.use("/api", routes_1.default);
+app.use(routes_1.default);
 app.get("/", (req, res) => {
     res.json({
         message: "TechFynite Backend Server",

@@ -7,7 +7,8 @@ export declare const SMTP_PORT: string;
 export declare const SMTP_USER: string;
 export declare const SMTP_PASS: string;
 export declare const EMAIL_FROM: string;
-export declare const CLOUD_NAME: string;
-export declare const API_KEY: string;
-export declare const API_SECRET: string;
+export declare const CLOUDINARY_CLOUD_NAME: string;
+export declare const CLOUDINARY_API_KEY: string;
+export declare const CLOUDINARY_API_SECRET: string;
+export declare const CLOUDINARY_URL: string;
 //# sourceMappingURL=secret.d.ts.map

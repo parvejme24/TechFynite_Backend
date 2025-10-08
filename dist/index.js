@@ -35,5 +35,7 @@ process.on('SIGTERM', async () => {
     console.log('\n🛑 Received SIGTERM, shutting down gracefully...');
     process.exit(0);
 });
-startServer();
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    startServer();
+}
 //# sourceMappingURL=index.js.map

@@ -4,10 +4,20 @@ exports.NewsletterService = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 class NewsletterService {
-    async subscribeNewsletter(email) {
+    async subscribeNewsletter(email, userId) {
         try {
             const existingSubscriber = await prisma.newsletter.findUnique({
                 where: { email },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            fullName: true,
+                            email: true,
+                            role: true,
+                        },
+                    },
+                },
             });
             if (existingSubscriber) {
                 if (existingSubscriber.isActive) {
@@ -16,7 +26,21 @@ class NewsletterService {
                 else {
                     const reactivatedSubscriber = await prisma.newsletter.update({
                         where: { email },
-                        data: { isActive: true, updatedAt: new Date() },
+                        data: {
+                            isActive: true,
+                            updatedAt: new Date(),
+                            userId: userId || existingSubscriber.userId,
+                        },
+                        include: {
+                            user: {
+                                select: {
+                                    id: true,
+                                    fullName: true,
+                                    email: true,
+                                    role: true,
+                                },
+                            },
+                        },
                     });
                     return reactivatedSubscriber;
                 }
@@ -24,7 +48,18 @@ class NewsletterService {
             const newSubscriber = await prisma.newsletter.create({
                 data: {
                     email,
+                    userId,
                     isActive: true,
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            fullName: true,
+                            email: true,
+                            role: true,
+                        },
+                    },
                 },
             });
             return newSubscriber;
@@ -36,6 +71,16 @@ class NewsletterService {
     async getAllSubscribers() {
         try {
             const subscribers = await prisma.newsletter.findMany({
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            fullName: true,
+                            email: true,
+                            role: true,
+                        },
+                    },
+                },
                 orderBy: { createdAt: "desc" },
             });
             return subscribers;

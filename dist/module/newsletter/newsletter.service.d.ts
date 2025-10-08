@@ -1,7 +1,7 @@
 import { INewsletterService } from "./newsletter.interface";
 import { NewsletterSubscriber, NewsletterStats } from "./newsletter.type";
 export declare class NewsletterService implements INewsletterService {
-    subscribeNewsletter(email: string): Promise<NewsletterSubscriber>;
+    subscribeNewsletter(email: string, userId?: string): Promise<NewsletterSubscriber>;
     getAllSubscribers(): Promise<NewsletterSubscriber[]>;
     deleteSubscriber(id: string): Promise<{
         success: boolean;

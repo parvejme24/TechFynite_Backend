@@ -11,6 +11,9 @@ dotenv.config();
 
 const app = express();
 
+// Trust proxy for Vercel deployment
+app.set('trust proxy', 1);
+
 // Logging middleware
 app.use(morgan("dev"));
 
@@ -26,9 +29,15 @@ app.use(xss());
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: 100,
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 100, // limit each IP to 100 requests per windowMs
   message: "Too many requests from this IP, please try again later.",
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  keyGenerator: (req) => {
+    // Use X-Forwarded-For header for Vercel
+    return req.ip || req.connection.remoteAddress || 'unknown';
+  }
 });
 app.use(limiter);
 
@@ -39,6 +48,10 @@ app.use(
       "http://localhost:3000",
       "http://localhost:3001",
       "http://localhost:5174",
+      "https://tf-f-ts.vercel.app",
+      "https://techfynite.vercel.app",
+      "https://www.techfynite.com",
+      "https://www.techfynite.org",
     ],
     credentials: true,
   })

@@ -21,9 +21,16 @@ export type NewsletterIdParams = z.infer<typeof newsletterIdSchema>;
 export interface NewsletterSubscriber {
     id: string;
     email: string;
+    userId?: string | null;
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
+    user?: {
+        id: string;
+        fullName: string;
+        email: string;
+        role: string;
+    } | null;
 }
 export interface NewsletterStats {
     totalSubscribers: number;
