@@ -106,21 +106,80 @@ export const addBlog = async (req: Request, res: Response) => {
     
     // Handle multipart/form-data uploads (main image + additional images)
     if (req.headers['content-type']?.includes('multipart/form-data')) {
-      // Fields upload: image (single), images (array)
+      // Get the main image file from req.file (single upload)
+      const mainImageFile = (req as any).file;
+      
+      // Get additional images from req.files (if using .array() or .fields())
       const filesMap = (req as any).files || {};
-      const mainImageFile = Array.isArray(filesMap.image) ? filesMap.image[0] : undefined;
       const additionalImageFiles = Array.isArray(filesMap.images) ? filesMap.images : [];
 
       // Upload main image if provided
       if (mainImageFile) {
-        const uploadedMain = await uploadBufferToCloudinary(mainImageFile, "techfynite/blogs");
-        blogData.imageUrl = uploadedMain.url;
+        try {
+          const uploadedMain = await uploadBufferToCloudinary(mainImageFile, "techfynite/blogs");
+          blogData.imageUrl = uploadedMain.url;
+          console.log("✅ Main image uploaded successfully:", uploadedMain.url);
+        } catch (error) {
+          console.error("❌ Error uploading main image:", error);
+          return res.status(500).json({
+            success: false,
+            message: "Failed to upload main image",
+            error: error instanceof Error ? error.message : "Unknown error",
+          });
+        }
       }
 
       // Upload additional images if provided
       if (additionalImageFiles.length > 0) {
-        const uploaded = await uploadBuffersToCloudinary(additionalImageFiles, "techfynite/blogs");
-        blogData.screenshots = uploaded.map((u: { url: string; publicId: string }) => u.url);
+        try {
+          const uploaded = await uploadBuffersToCloudinary(additionalImageFiles, "techfynite/blogs");
+          blogData.screenshots = uploaded.map((u: { url: string; publicId: string }) => u.url);
+          console.log("✅ Additional images uploaded successfully:", uploaded.length);
+        } catch (error) {
+          console.error("❌ Error uploading additional images:", error);
+          return res.status(500).json({
+            success: false,
+            message: "Failed to upload additional images",
+            error: error instanceof Error ? error.message : "Unknown error",
+          });
+        }
+      }
+      
+      // Parse JSON fields from multipart form data
+      // Parse description if it's a string
+      if (blogData.description && typeof blogData.description === 'string') {
+        try {
+          blogData.description = JSON.parse(blogData.description);
+        } catch (e) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid description format. Must be valid JSON.",
+            error: "Description field must be a valid JSON string"
+          });
+        }
+      }
+      
+      // Parse content if it's a string
+      if (blogData.content && typeof blogData.content === 'string') {
+        try {
+          blogData.content = JSON.parse(blogData.content);
+        } catch (e) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid content format. Must be valid JSON.",
+            error: "Content field must be a valid JSON string"
+          });
+        }
+      }
+      
+      // Convert readingTime to number
+      if (blogData.readingTime && typeof blogData.readingTime === 'string') {
+        blogData.readingTime = parseFloat(blogData.readingTime);
+      }
+      
+      // Convert isPublished to boolean
+      if (blogData.isPublished && typeof blogData.isPublished === 'string') {
+        blogData.isPublished = blogData.isPublished === 'true';
       }
     }
     
@@ -150,17 +209,77 @@ export const updateBlog = async (req: Request, res: Response) => {
     let updateData = { ...req.body };
     
     if (req.headers['content-type']?.includes('multipart/form-data')) {
+      // Get the main image file from req.file (single upload)
+      const mainImageFile = (req as any).file;
+      
+      // Get additional images from req.files (if using .array() or .fields())
       const filesMap = (req as any).files || {};
-      const mainImageFile = Array.isArray(filesMap.image) ? filesMap.image[0] : undefined;
       const additionalImageFiles = Array.isArray(filesMap.images) ? filesMap.images : [];
 
       if (mainImageFile) {
-        const uploadedMain = await uploadBufferToCloudinary(mainImageFile, "techfynite/blogs");
-        updateData.imageUrl = uploadedMain.url;
+        try {
+          const uploadedMain = await uploadBufferToCloudinary(mainImageFile, "techfynite/blogs");
+          updateData.imageUrl = uploadedMain.url;
+          console.log("✅ Main image uploaded successfully:", uploadedMain.url);
+        } catch (error) {
+          console.error("❌ Error uploading main image:", error);
+          return res.status(500).json({
+            success: false,
+            message: "Failed to upload main image",
+            error: error instanceof Error ? error.message : "Unknown error",
+          });
+        }
       }
       if (additionalImageFiles.length > 0) {
-        const uploaded = await uploadBuffersToCloudinary(additionalImageFiles, "techfynite/blogs");
-        updateData.screenshots = uploaded.map((u: { url: string; publicId: string }) => u.url);
+        try {
+          const uploaded = await uploadBuffersToCloudinary(additionalImageFiles, "techfynite/blogs");
+          updateData.screenshots = uploaded.map((u: { url: string; publicId: string }) => u.url);
+          console.log("✅ Additional images uploaded successfully:", uploaded.length);
+        } catch (error) {
+          console.error("❌ Error uploading additional images:", error);
+          return res.status(500).json({
+            success: false,
+            message: "Failed to upload additional images",
+            error: error instanceof Error ? error.message : "Unknown error",
+          });
+        }
+      }
+      
+      // Parse JSON fields from multipart form data
+      // Parse description if it's a string
+      if (updateData.description && typeof updateData.description === 'string') {
+        try {
+          updateData.description = JSON.parse(updateData.description);
+        } catch (e) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid description format. Must be valid JSON.",
+            error: "Description field must be a valid JSON string"
+          });
+        }
+      }
+      
+      // Parse content if it's a string
+      if (updateData.content && typeof updateData.content === 'string') {
+        try {
+          updateData.content = JSON.parse(updateData.content);
+        } catch (e) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid content format. Must be valid JSON.",
+            error: "Content field must be a valid JSON string"
+          });
+        }
+      }
+      
+      // Convert readingTime to number
+      if (updateData.readingTime && typeof updateData.readingTime === 'string') {
+        updateData.readingTime = parseFloat(updateData.readingTime);
+      }
+      
+      // Convert isPublished to boolean
+      if (updateData.isPublished && typeof updateData.isPublished === 'string') {
+        updateData.isPublished = updateData.isPublished === 'true';
       }
     }
     

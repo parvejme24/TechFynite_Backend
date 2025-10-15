@@ -115,7 +115,10 @@ class BlogService {
     async createBlog(data) {
         let slug = data.slug;
         if (!slug || slug.trim() === '') {
-            slug = this.generateSlug(data.title);
+            slug = await this.generateUniqueSlug(data.title);
+        }
+        else {
+            slug = await this.generateUniqueSlug(slug);
         }
         const blog = await prisma.blog.create({
             data: {
@@ -145,14 +148,17 @@ class BlogService {
     async updateBlog(id, data) {
         const existingBlog = await prisma.blog.findUnique({
             where: { id },
-            select: { categoryId: true },
+            select: { categoryId: true, slug: true },
         });
         if (!existingBlog) {
             return null;
         }
         let updateData = { ...data };
         if (data.title && (!data.slug || data.slug.trim() === '')) {
-            updateData.slug = this.generateSlug(data.title);
+            updateData.slug = await this.generateUniqueSlug(data.title);
+        }
+        else if (data.slug && data.slug !== existingBlog.slug) {
+            updateData.slug = await this.generateUniqueSlug(data.slug);
         }
         const blog = await prisma.blog.update({
             where: { id },
@@ -355,6 +361,23 @@ class BlogService {
             .replace(/-+/g, '-')
             .replace(/^-|-$/g, '');
         return slug || 'untitled-' + Date.now();
+    }
+    async generateUniqueSlug(baseSlug) {
+        const baseSlugGenerated = this.generateSlug(baseSlug);
+        let slug = baseSlugGenerated;
+        let counter = 1;
+        while (true) {
+            const existingBlog = await prisma.blog.findUnique({
+                where: { slug },
+                select: { id: true },
+            });
+            if (!existingBlog) {
+                break;
+            }
+            slug = `${baseSlugGenerated}-${counter}`;
+            counter++;
+        }
+        return slug;
     }
 }
 exports.BlogService = BlogService;

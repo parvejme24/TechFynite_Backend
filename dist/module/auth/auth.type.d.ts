@@ -52,9 +52,9 @@ export declare const userQuerySchema: z.ZodObject<{
     sortBy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
         fullName: "fullName";
         email: "email";
-        lastLoginAt: "lastLoginAt";
         createdAt: "createdAt";
         updatedAt: "updatedAt";
+        lastLoginAt: "lastLoginAt";
     }>>>;
     sortOrder: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
         asc: "asc";

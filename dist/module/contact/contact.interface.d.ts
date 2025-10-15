@@ -1,27 +1,50 @@
-import { Contact, ContactReply, ContactStats, PaginatedContacts } from "./contact.type";
-export interface IContactService {
-    addNewContact(data: {
-        projectDetails: string;
-        budget: string;
-        fullName: string;
-        email: string;
-        companyName: string;
-        serviceRequired: string;
-        userId?: string;
-    }): Promise<Contact>;
-    getAllContacts(page?: number, limit?: number, search?: string): Promise<PaginatedContacts>;
-    getContactById(id: string): Promise<Contact | null>;
-    getUserContacts(userId: string, page?: number, limit?: number): Promise<PaginatedContacts>;
-    getContactsByUserEmail(userEmail: string, page?: number, limit?: number): Promise<PaginatedContacts>;
-    deleteContact(id: string, userId?: string): Promise<{
-        success: boolean;
-        message: string;
-    }>;
-    sendContactReply(contactId: string, userId: string | undefined, data: {
-        subject: string;
-        message: string;
-    }): Promise<ContactReply>;
-    getContactReplies(contactId: string): Promise<ContactReply[]>;
-    getContactStats(period?: string, startDate?: string, endDate?: string): Promise<ContactStats>;
+import { Contact, ContactReply, User } from "@prisma/client";
+export interface IContact extends Contact {
+    user?: User | null;
+    replies?: ContactReply[];
+}
+export interface ICreateContact {
+    projectDetails: string;
+    budget: string;
+    fullName: string;
+    email: string;
+    companyName: string;
+    serviceRequired: string;
+    userId?: string;
+}
+export interface IUpdateContact {
+    projectDetails?: string;
+    budget?: string;
+    fullName?: string;
+    email?: string;
+    companyName?: string;
+    serviceRequired?: string;
+}
+export interface IContactQuery {
+    page?: number;
+    limit?: number;
+    search?: string;
+    userId?: string;
+    email?: string;
+    sortBy?: 'createdAt' | 'fullName' | 'email';
+    sortOrder?: 'asc' | 'desc';
+}
+export interface IContactStats {
+    totalContacts: number;
+    totalReplies: number;
+    contactsThisMonth: number;
+    contactsLastMonth: number;
+    averageRepliesPerContact: number;
+    recentContacts: IContact[];
+}
+export interface IContactReply extends ContactReply {
+    user?: User | null;
+    contact?: Contact | null;
+}
+export interface ICreateContactReply {
+    subject: string;
+    message: string;
+    contactId: string;
+    userId: string;
 }
 //# sourceMappingURL=contact.interface.d.ts.map

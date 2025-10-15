@@ -12,6 +12,7 @@ const morgan_1 = __importDefault(require("morgan"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
+app.set("trust proxy", 1);
 app.use((0, morgan_1.default)("dev"));
 app.use((req, res, next) => {
     console.log(`📝 ${new Date().toISOString()} - ${req.method} ${req.url}`);
@@ -23,19 +24,27 @@ const limiter = (0, express_rate_limit_1.default)({
     windowMs: 60 * 60 * 1000,
     max: 100,
     message: "Too many requests from this IP, please try again later.",
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => {
+        return req.ip || req.connection.remoteAddress || "unknown";
+    },
 });
 app.use(limiter);
+const allowedOrigins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:5174",
+    "https://tf-f-ts.vercel.app",
+    "https://techfynite.vercel.app",
+    "https://www.techfynite.com",
+    "https://www.techfynite.org",
+];
 app.use((0, cors_1.default)({
-    origin: process.env.FRONTEND_URL || [
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://localhost:5174",
-        "https://tf-f-ts.vercel.app",
-        "https://techfynite.vercel.app",
-        "https://www.techfynite.com",
-        "https://www.techfynite.org",
-    ],
+    origin: allowedOrigins,
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Access-Control-Allow-Origin"],
 }));
 app.use(express_1.default.json({ limit: "10mb" }));
 app.use(express_1.default.urlencoded({ extended: true, limit: "10mb" }));

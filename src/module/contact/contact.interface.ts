@@ -1,33 +1,63 @@
-import { Contact, ContactReply, ContactStats, PaginatedContacts } from "./contact.type";
+import { Contact, ContactReply, User } from "@prisma/client";
 
-export interface IContactService {
-  addNewContact(data: {
-    projectDetails: string;
-    budget: string;
-    fullName: string;
-    email: string;
-    companyName: string;
-    serviceRequired: string;
-    userId?: string;
-  }): Promise<Contact>;
+// Base Contact interface
+export interface IContact extends Contact {
+  user?: User | null;
+  replies?: ContactReply[];
+}
 
-  getAllContacts(page?: number, limit?: number, search?: string): Promise<PaginatedContacts>;
+// Contact creation interface
+export interface ICreateContact {
+  projectDetails: string;
+  budget: string;
+  fullName: string;
+  email: string;
+  companyName: string;
+  serviceRequired: string;
+  userId?: string;
+}
 
-  getContactById(id: string): Promise<Contact | null>;
+// Contact update interface
+export interface IUpdateContact {
+  projectDetails?: string;
+  budget?: string;
+  fullName?: string;
+  email?: string;
+  companyName?: string;
+  serviceRequired?: string;
+}
 
-  getUserContacts(userId: string, page?: number, limit?: number): Promise<PaginatedContacts>;
+// Contact query interface
+export interface IContactQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  userId?: string;
+  email?: string;
+  sortBy?: 'createdAt' | 'fullName' | 'email';
+  sortOrder?: 'asc' | 'desc';
+}
 
-  getContactsByUserEmail(userEmail: string, page?: number, limit?: number): Promise<PaginatedContacts>;
+// Contact stats interface
+export interface IContactStats {
+  totalContacts: number;
+  totalReplies: number;
+  contactsThisMonth: number;
+  contactsLastMonth: number;
+  averageRepliesPerContact: number;
+  recentContacts: IContact[];
+}
 
-  deleteContact(id: string, userId?: string): Promise<{ success: boolean; message: string }>;
+// Contact reply interface
+export interface IContactReply extends ContactReply {
+  user?: User | null;
+  contact?: Contact | null;
+}
 
-  sendContactReply(
-    contactId: string,
-    userId: string | undefined,
-    data: { subject: string; message: string }
-  ): Promise<ContactReply>;
-
-  getContactReplies(contactId: string): Promise<ContactReply[]>;
-
-  getContactStats(period?: string, startDate?: string, endDate?: string): Promise<ContactStats>;
+// Create contact reply interface
+export interface ICreateContactReply {
+  subject: string;
+  message: string;
+  contactId: string;
+  userId: string;
 }

@@ -144,7 +144,10 @@ export class BlogService {
     // Generate slug if not provided
     let slug = data.slug;
     if (!slug || slug.trim() === '') {
-      slug = this.generateSlug(data.title);
+      slug = await this.generateUniqueSlug(data.title);
+    } else {
+      // Check if provided slug is unique
+      slug = await this.generateUniqueSlug(slug);
     }
     
     const blog = await prisma.blog.create({
@@ -180,17 +183,20 @@ export class BlogService {
   public async updateBlog(id: string, data: IUpdateBlog): Promise<IBlog | null> {
     const existingBlog = await prisma.blog.findUnique({
       where: { id },
-      select: { categoryId: true },
+      select: { categoryId: true, slug: true },
     });
     
     if (!existingBlog) {
       return null;
     }
     
-    // Generate slug if title is provided but slug is not
+    // Generate unique slug if title is provided but slug is not, or if slug is being updated
     let updateData = { ...data };
     if (data.title && (!data.slug || data.slug.trim() === '')) {
-      updateData.slug = this.generateSlug(data.title);
+      updateData.slug = await this.generateUniqueSlug(data.title);
+    } else if (data.slug && data.slug !== existingBlog.slug) {
+      // If slug is being changed, ensure it's unique
+      updateData.slug = await this.generateUniqueSlug(data.slug);
     }
     
     const blog = await prisma.blog.update({
@@ -466,6 +472,32 @@ export class BlogService {
     
     // Ensure we have a valid slug
     return slug || 'untitled-' + Date.now();
+  }
+
+  // Generate unique slug by checking database
+  private async generateUniqueSlug(baseSlug: string): Promise<string> {
+    const baseSlugGenerated = this.generateSlug(baseSlug);
+    let slug = baseSlugGenerated;
+    let counter = 1;
+
+    // Check if slug exists and generate unique one
+    while (true) {
+      const existingBlog = await prisma.blog.findUnique({
+        where: { slug },
+        select: { id: true },
+      });
+
+      if (!existingBlog) {
+        // Slug is unique, we can use it
+        break;
+      }
+
+      // Slug exists, try with counter
+      slug = `${baseSlugGenerated}-${counter}`;
+      counter++;
+    }
+
+    return slug;
   }
 }
 

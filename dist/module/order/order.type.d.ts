@@ -19,8 +19,8 @@ export declare const createOrderSchema: z.ZodObject<{
 export declare const updateOrderStatusSchema: z.ZodObject<{
     status: z.ZodEnum<{
         PENDING: "PENDING";
-        COMPLETED: "COMPLETED";
         PROCESSING: "PROCESSING";
+        COMPLETED: "COMPLETED";
         CANCELLED: "CANCELLED";
         REFUNDED: "REFUNDED";
     }>;
@@ -33,8 +33,8 @@ export declare const orderQuerySchema: z.ZodObject<{
     limit: z.ZodDefault<z.ZodPipe<z.ZodPipe<z.ZodString, z.ZodTransform<number, string>>, z.ZodNumber>>;
     status: z.ZodOptional<z.ZodEnum<{
         PENDING: "PENDING";
-        COMPLETED: "COMPLETED";
         PROCESSING: "PROCESSING";
+        COMPLETED: "COMPLETED";
         CANCELLED: "CANCELLED";
         REFUNDED: "REFUNDED";
     }>>;

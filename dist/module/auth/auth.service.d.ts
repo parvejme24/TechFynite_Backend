@@ -38,18 +38,18 @@ declare class AuthService {
             isBanned: boolean;
             isTrashed: boolean;
             isDeletedPermanently: boolean;
-            nextAuthSecret: string | null;
-            nextAuthExpiresAt: Date | null;
-            isLoggedIn: boolean;
-            lastLoginAt: Date | null;
-            provider: string | null;
-            providerId: string | null;
             otpCode: string | null;
             otpPurpose: import(".prisma/client").$Enums.OtpPurpose | null;
             otpExpiresAt: Date | null;
             otpVerified: boolean;
             createdAt: Date;
             updatedAt: Date;
+            isLoggedIn: boolean;
+            lastLoginAt: Date | null;
+            nextAuthExpiresAt: Date | null;
+            nextAuthSecret: string | null;
+            provider: string | null;
+            providerId: string | null;
         })[];
         pagination: {
             page: number;

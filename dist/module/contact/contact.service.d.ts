@@ -1,28 +1,67 @@
-import { IContactService } from "./contact.interface";
-import { Contact, ContactReply, ContactStats, PaginatedContacts } from "./contact.type";
-export declare class ContactService implements IContactService {
-    addNewContact(data: {
-        projectDetails: string;
-        budget: string;
-        fullName: string;
-        email: string;
-        companyName: string;
-        serviceRequired: string;
-        userId?: string;
-    }): Promise<Contact>;
-    getAllContacts(page?: number, limit?: number, status?: string, search?: string): Promise<PaginatedContacts>;
-    getContactById(id: string): Promise<Contact | null>;
-    getUserContacts(userId: string, page?: number, limit?: number): Promise<PaginatedContacts>;
-    getContactsByUserEmail(userEmail: string, page?: number, limit?: number): Promise<PaginatedContacts>;
-    deleteContact(id: string, userId?: string, userRole?: string): Promise<{
-        success: boolean;
-        message: string;
+import { IContact, ICreateContact, IUpdateContact, IContactQuery, IContactStats, ICreateContactReply } from "./contact.interface";
+export declare class ContactService {
+    getAllContacts(query: IContactQuery): Promise<{
+        contacts: IContact[];
+        pagination: {
+            page: number;
+            limit: number;
+            total: number;
+            totalPages: number;
+            hasNext: boolean;
+            hasPrev: boolean;
+        };
     }>;
-    sendContactReply(contactId: string, userId: string, data: {
-        subject: string;
+    getContactById(id: string): Promise<IContact | null>;
+    getContactsByUserEmail(userEmail: string): Promise<IContact[]>;
+    createContact(data: ICreateContact): Promise<IContact>;
+    updateContact(id: string, data: IUpdateContact): Promise<IContact | null>;
+    deleteContact(id: string): Promise<boolean>;
+    createContactReply(data: ICreateContactReply): Promise<{
+        user: {
+            id: string;
+            fullName: string;
+            email: string;
+            password: string | null;
+            role: import(".prisma/client").$Enums.UserRole;
+            isBanned: boolean;
+            isTrashed: boolean;
+            isDeletedPermanently: boolean;
+            otpCode: string | null;
+            otpPurpose: import(".prisma/client").$Enums.OtpPurpose | null;
+            otpExpiresAt: Date | null;
+            otpVerified: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+            isLoggedIn: boolean;
+            lastLoginAt: Date | null;
+            nextAuthExpiresAt: Date | null;
+            nextAuthSecret: string | null;
+            provider: string | null;
+            providerId: string | null;
+        };
+        contact: {
+            id: string;
+            fullName: string;
+            email: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string | null;
+            projectDetails: string;
+            budget: string;
+            companyName: string;
+            serviceRequired: string;
+        };
+    } & {
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        userId: string;
         message: string;
-    }): Promise<ContactReply>;
-    getContactReplies(contactId: string): Promise<ContactReply[]>;
-    getContactStats(period?: string, startDate?: string, endDate?: string): Promise<ContactStats>;
+        subject: string;
+        contactId: string;
+    }>;
+    getContactStats(): Promise<IContactStats>;
+    contactExists(id: string): Promise<boolean>;
 }
+export declare const contactService: ContactService;
 //# sourceMappingURL=contact.service.d.ts.map

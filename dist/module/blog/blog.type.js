@@ -13,7 +13,10 @@ exports.createBlogSchema = zod_1.z.object({
     ]).transform((v) => (typeof v === 'string' ? Number(v) : v)).pipe(zod_1.z.number().min(0).max(60)),
     authorId: zod_1.z.string().uuid("Invalid author ID"),
     slug: zod_1.z.string().min(1, "Slug cannot be empty").max(200, "Slug must be less than 200 characters").optional(),
-    isPublished: zod_1.z.boolean().optional().default(false),
+    isPublished: zod_1.z.union([
+        zod_1.z.boolean(),
+        zod_1.z.string().transform((val) => val === 'true')
+    ]).optional().default(false),
     content: zod_1.z.any().optional(),
 });
 exports.updateBlogSchema = zod_1.z.object({
@@ -26,7 +29,10 @@ exports.updateBlogSchema = zod_1.z.object({
         zod_1.z.string().regex(/^\d+(\.\d+)?$/).transform(Number)
     ]).transform((v) => (typeof v === 'string' ? Number(v) : v)).pipe(zod_1.z.number().min(0).max(60)).optional(),
     slug: zod_1.z.string().min(1, "Slug cannot be empty").max(200, "Slug must be less than 200 characters").optional(),
-    isPublished: zod_1.z.boolean().optional(),
+    isPublished: zod_1.z.union([
+        zod_1.z.boolean(),
+        zod_1.z.string().transform((val) => val === 'true')
+    ]).optional(),
     content: zod_1.z.any().optional(),
 });
 exports.blogQuerySchema = zod_1.z.object({

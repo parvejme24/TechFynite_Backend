@@ -7,7 +7,7 @@ export declare const createBlogSchema: z.ZodObject<{
     readingTime: z.ZodPipe<z.ZodPipe<z.ZodUnion<readonly [z.ZodNumber, z.ZodPipe<z.ZodString, z.ZodTransform<number, string>>]>, z.ZodTransform<number, number>>, z.ZodNumber>;
     authorId: z.ZodString;
     slug: z.ZodOptional<z.ZodString>;
-    isPublished: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+    isPublished: z.ZodDefault<z.ZodOptional<z.ZodUnion<readonly [z.ZodBoolean, z.ZodPipe<z.ZodString, z.ZodTransform<boolean, string>>]>>>;
     content: z.ZodOptional<z.ZodAny>;
 }, z.core.$strip>;
 export declare const updateBlogSchema: z.ZodObject<{
@@ -17,7 +17,7 @@ export declare const updateBlogSchema: z.ZodObject<{
     description: z.ZodOptional<z.ZodAny>;
     readingTime: z.ZodOptional<z.ZodPipe<z.ZodPipe<z.ZodUnion<readonly [z.ZodNumber, z.ZodPipe<z.ZodString, z.ZodTransform<number, string>>]>, z.ZodTransform<number, number>>, z.ZodNumber>>;
     slug: z.ZodOptional<z.ZodString>;
-    isPublished: z.ZodOptional<z.ZodBoolean>;
+    isPublished: z.ZodOptional<z.ZodUnion<readonly [z.ZodBoolean, z.ZodPipe<z.ZodString, z.ZodTransform<boolean, string>>]>>;
     content: z.ZodOptional<z.ZodAny>;
 }, z.core.$strip>;
 export declare const blogQuerySchema: z.ZodObject<{

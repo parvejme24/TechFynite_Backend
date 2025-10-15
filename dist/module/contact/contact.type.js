@@ -1,27 +1,56 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.contactQuerySchema = exports.contactIdSchema = exports.contactReplySchema = exports.contactFormSchema = void 0;
+exports.userEmailParamsSchema = exports.contactParamsSchema = exports.createContactReplySchema = exports.contactQuerySchema = exports.updateContactSchema = exports.createContactSchema = void 0;
 const zod_1 = require("zod");
-exports.contactFormSchema = zod_1.z.object({
-    projectDetails: zod_1.z.string().min(10, "Project details must be at least 10 characters").max(1000, "Project details must not exceed 1000 characters"),
-    budget: zod_1.z.string().min(1, "Budget is required").max(50, "Budget must not exceed 50 characters"),
-    fullName: zod_1.z.string().min(2, "Full name must be at least 2 characters").max(100, "Full name must not exceed 100 characters"),
-    email: zod_1.z.string().email("Invalid email format").min(1, "Email is required"),
-    companyName: zod_1.z.string().min(1, "Company name is required").max(100, "Company name must not exceed 100 characters"),
-    serviceRequired: zod_1.z.string().min(1, "Service required is required").max(100, "Service required must not exceed 100 characters"),
-    userId: zod_1.z.string().uuid().optional(),
+exports.createContactSchema = zod_1.z.object({
+    body: zod_1.z.object({
+        projectDetails: zod_1.z.string().min(10, "Project details must be at least 10 characters"),
+        budget: zod_1.z.string().min(1, "Budget is required"),
+        fullName: zod_1.z.string().min(2, "Full name must be at least 2 characters"),
+        email: zod_1.z.string().email("Invalid email format"),
+        companyName: zod_1.z.string().min(1, "Company name is required"),
+        serviceRequired: zod_1.z.string().min(1, "Service required is mandatory"),
+        userId: zod_1.z.string().uuid().optional(),
+    }),
 });
-exports.contactReplySchema = zod_1.z.object({
-    subject: zod_1.z.string().min(1, "Subject is required").max(200, "Subject must not exceed 200 characters"),
-    message: zod_1.z.string().min(10, "Message must be at least 10 characters").max(2000, "Message must not exceed 2000 characters"),
-});
-exports.contactIdSchema = zod_1.z.object({
-    id: zod_1.z.string().uuid("Invalid contact ID format"),
+exports.updateContactSchema = zod_1.z.object({
+    body: zod_1.z.object({
+        projectDetails: zod_1.z.string().min(10, "Project details must be at least 10 characters").optional(),
+        budget: zod_1.z.string().min(1, "Budget is required").optional(),
+        fullName: zod_1.z.string().min(2, "Full name must be at least 2 characters").optional(),
+        email: zod_1.z.string().email("Invalid email format").optional(),
+        companyName: zod_1.z.string().min(1, "Company name is required").optional(),
+        serviceRequired: zod_1.z.string().min(1, "Service required is mandatory").optional(),
+    }),
 });
 exports.contactQuerySchema = zod_1.z.object({
-    page: zod_1.z.string().optional().transform((val) => val ? parseInt(val, 10) : 1),
-    limit: zod_1.z.string().optional().transform((val) => val ? parseInt(val, 10) : 10),
-    status: zod_1.z.enum(["PENDING", "IN_PROGRESS", "COMPLETED"]).optional(),
-    search: zod_1.z.string().optional(),
+    query: zod_1.z.object({
+        page: zod_1.z.string().transform(Number).pipe(zod_1.z.number().min(1)).optional(),
+        limit: zod_1.z.string().transform(Number).pipe(zod_1.z.number().min(1).max(100)).optional(),
+        search: zod_1.z.string().optional(),
+        userId: zod_1.z.string().uuid().optional(),
+        email: zod_1.z.string().email().optional(),
+        sortBy: zod_1.z.enum(['createdAt', 'fullName', 'email']).optional(),
+        sortOrder: zod_1.z.enum(['asc', 'desc']).optional(),
+    }),
+});
+exports.createContactReplySchema = zod_1.z.object({
+    body: zod_1.z.object({
+        subject: zod_1.z.string().min(1, "Subject is required"),
+        message: zod_1.z.string().min(10, "Message must be at least 10 characters"),
+        userEmail: zod_1.z.string().optional(),
+        userName: zod_1.z.string().optional(),
+        userId: zod_1.z.string().optional(),
+    }),
+});
+exports.contactParamsSchema = zod_1.z.object({
+    params: zod_1.z.object({
+        id: zod_1.z.string().uuid("Invalid contact ID format"),
+    }),
+});
+exports.userEmailParamsSchema = zod_1.z.object({
+    params: zod_1.z.object({
+        userEmail: zod_1.z.string().email("Invalid email format"),
+    }),
 });
 //# sourceMappingURL=contact.type.js.map

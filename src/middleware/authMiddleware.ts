@@ -4,6 +4,8 @@ import { authService } from "../module/auth/auth.service";
 // Authentication middleware using NextAuth secret
 export const authenticateUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    console.log('🔐 Authenticating user...');
+    
     // Get NextAuth secret from header, Authorization bearer, or body
     let nextAuthSecret = req.headers['x-nextauth-secret'] as string || req.body?.nextAuthSecret;
     if (!nextAuthSecret) {
@@ -14,6 +16,7 @@ export const authenticateUser = async (req: Request, res: Response, next: NextFu
     }
     
     if (!nextAuthSecret) {
+      console.log('❌ No authentication token provided');
       return res.status(401).json({
         success: false,
         message: "Authentication required",
@@ -21,10 +24,12 @@ export const authenticateUser = async (req: Request, res: Response, next: NextFu
       });
     }
 
+    console.log('🔍 Validating session...');
     // Validate session
     const sessionValidation = await authService.validateSession(nextAuthSecret);
     
     if (!sessionValidation.isValid) {
+      console.log('❌ Invalid session:', sessionValidation.error);
       return res.status(401).json({
         success: false,
         message: "Invalid or expired session",
@@ -32,12 +37,13 @@ export const authenticateUser = async (req: Request, res: Response, next: NextFu
       });
     }
 
+    console.log('✅ User authenticated:', { userId: sessionValidation.user?.id, role: sessionValidation.user?.role });
     // Add user to request object
     (req as any).user = sessionValidation.user;
     next();
     return;
   } catch (error) {
-    console.error("Error in authentication middleware:", error);
+    console.error("❌ Error in authentication middleware:", error);
     return res.status(500).json({
       success: false,
       message: "Authentication error",
@@ -52,6 +58,7 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction) =>
     const user = (req as any).user;
     
     if (!user) {
+      console.log('❌ Admin check failed: User not authenticated');
       return res.status(401).json({
         success: false,
         message: "Authentication required",
@@ -59,7 +66,10 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction) =>
       });
     }
 
+    console.log('🔍 Checking admin role for user:', { userId: user.id, role: user.role });
+    
     if (user.role !== 'ADMIN') {
+      console.log('❌ Admin check failed: Insufficient permissions');
       return res.status(403).json({
         success: false,
         message: "Admin access required",
@@ -67,10 +77,11 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction) =>
       });
     }
 
+    console.log('✅ Admin access granted');
     next();
     return;
   } catch (error) {
-    console.error("Error in admin authorization middleware:", error);
+    console.error("❌ Error in admin authorization middleware:", error);
     return res.status(500).json({
       success: false,
       message: "Authorization error",
@@ -113,6 +124,7 @@ export const checkUserStatus = (req: Request, res: Response, next: NextFunction)
     const user = (req as any).user;
     
     if (!user) {
+      console.log('❌ User status check failed: User not authenticated');
       return res.status(401).json({
         success: false,
         message: "Authentication required",
@@ -120,7 +132,15 @@ export const checkUserStatus = (req: Request, res: Response, next: NextFunction)
       });
     }
 
+    console.log('🔍 Checking user status:', { 
+      userId: user.id, 
+      isBanned: user.isBanned, 
+      isTrashed: user.isTrashed, 
+      isDeletedPermanently: user.isDeletedPermanently 
+    });
+
     if (user.isBanned) {
+      console.log('❌ User status check failed: Account is banned');
       return res.status(403).json({
         success: false,
         message: "Account is banned",
@@ -129,6 +149,7 @@ export const checkUserStatus = (req: Request, res: Response, next: NextFunction)
     }
 
     if (user.isTrashed) {
+      console.log('❌ User status check failed: Account is deleted');
       return res.status(403).json({
         success: false,
         message: "Account is deleted",
@@ -137,6 +158,7 @@ export const checkUserStatus = (req: Request, res: Response, next: NextFunction)
     }
 
     if (user.isDeletedPermanently) {
+      console.log('❌ User status check failed: Account is permanently deleted');
       return res.status(403).json({
         success: false,
         message: "Account is permanently deleted",
@@ -144,10 +166,11 @@ export const checkUserStatus = (req: Request, res: Response, next: NextFunction)
       });
     }
 
+    console.log('✅ User status check passed');
     next();
     return;
   } catch (error) {
-    console.error("Error in user status middleware:", error);
+    console.error("❌ Error in user status middleware:", error);
     return res.status(500).json({
       success: false,
       message: "User status check error",

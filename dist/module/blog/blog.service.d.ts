@@ -48,6 +48,7 @@ export declare class BlogService {
     togglePublish(id: string): Promise<IBlog | null>;
     private updateCategoryBlogCount;
     private generateSlug;
+    private generateUniqueSlug;
 }
 export declare const blogService: BlogService;
 //# sourceMappingURL=blog.service.d.ts.map

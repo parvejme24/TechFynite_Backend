@@ -13,7 +13,10 @@ export const createBlogSchema = z.object({
   ]).transform((v) => (typeof v === 'string' ? Number(v) : v)).pipe(z.number().min(0).max(60)),
   authorId: z.string().uuid("Invalid author ID"),
   slug: z.string().min(1, "Slug cannot be empty").max(200, "Slug must be less than 200 characters").optional(),
-  isPublished: z.boolean().optional().default(false), // Default to draft
+  isPublished: z.union([
+    z.boolean(),
+    z.string().transform((val) => val === 'true')
+  ]).optional().default(false), // Default to draft
   content: z.any().optional(), // JSON field
 });
 
@@ -28,7 +31,10 @@ export const updateBlogSchema = z.object({
     z.string().regex(/^\d+(\.\d+)?$/).transform(Number)
   ]).transform((v) => (typeof v === 'string' ? Number(v) : v)).pipe(z.number().min(0).max(60)).optional(),
   slug: z.string().min(1, "Slug cannot be empty").max(200, "Slug must be less than 200 characters").optional(),
-  isPublished: z.boolean().optional(),
+  isPublished: z.union([
+    z.boolean(),
+    z.string().transform((val) => val === 'true')
+  ]).optional(),
   content: z.any().optional(), // JSON field
 });
 

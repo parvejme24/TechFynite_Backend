@@ -12,7 +12,7 @@ dotenv.config();
 const app = express();
 
 // Trust proxy for Vercel deployment
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 
 // Logging middleware
 app.use(morgan("dev"));
@@ -36,24 +36,43 @@ const limiter = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   keyGenerator: (req) => {
     // Use X-Forwarded-For header for Vercel
-    return req.ip || req.connection.remoteAddress || 'unknown';
-  }
+    return req.ip || req.connection.remoteAddress || "unknown";
+  },
 });
 app.use(limiter);
 
 // CORS configuration
+// app.use(
+//   cors({
+//     origin: process.env.FRONTEND_URL || [
+//       "http://localhost:3000",
+//       "http://localhost:3001",
+//       "http://localhost:5174",
+//       "https://tf-f-ts.vercel.app",
+//       "https://techfynite.vercel.app",
+//       "https://www.techfynite.com",
+//       "https://www.techfynite.org",
+//     ],
+//     credentials: true,
+//   })
+// );
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "http://localhost:5174",
+  "https://tf-f-ts.vercel.app",
+  "https://techfynite.vercel.app",
+  "https://www.techfynite.com",
+  "https://www.techfynite.org",
+];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || [
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "http://localhost:5174",
-      "https://tf-f-ts.vercel.app",
-      "https://techfynite.vercel.app",
-      "https://www.techfynite.com",
-      "https://www.techfynite.org",
-    ],
+    origin: allowedOrigins,
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Access-Control-Allow-Origin"],
   })
 );
 
