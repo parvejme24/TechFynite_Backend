@@ -52,6 +52,7 @@ export const createTemplateSchema = z.object({
     return num;
   }).pipe(z.number().int().positive("Pages must be positive")).default(1),
   categoryId: z.string().uuid("Invalid category ID"),
+  categoryName: z.string().optional(),
   checkoutUrl: z.string().url().optional(),
 });
 
@@ -70,6 +71,10 @@ export const templateQuerySchema = z.object({
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
   minPrice: z.string().transform(Number).pipe(z.number().positive()).optional(),
   maxPrice: z.string().transform(Number).pipe(z.number().positive()).optional(),
+});
+
+export const newArrivalsQuerySchema = z.object({
+  limit: z.string().transform(Number).pipe(z.number().int().positive().max(50)).default(20),
 });
 
 // Template interfaces
@@ -93,6 +98,7 @@ export interface Template {
   downloads: number;
   totalPurchase: number;
   categoryId: string;
+  categoryName?: string;
   checkoutUrl?: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -130,6 +136,7 @@ export interface CreateTemplateInput {
   version?: number;
   pages?: number;
   categoryId: string;
+  categoryName?: string;
   checkoutUrl?: string;
 }
 
@@ -150,6 +157,7 @@ export interface UpdateTemplateInput {
   version?: number;
   pages?: number;
   categoryId?: string;
+  categoryName?: string;
   checkoutUrl?: string;
 }
 

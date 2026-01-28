@@ -49,6 +49,7 @@ export class TemplateService implements ITemplateService {
               image: true,
             },
           },
+          links: true,
         },
       }),
       prisma.template.count({ where }),
@@ -57,7 +58,7 @@ export class TemplateService implements ITemplateService {
     const totalPages = Math.ceil(total / limit);
 
     return {
-      templates: templates as Template[],
+      templates: templates as unknown as Template[],
       pagination: {
         page,
         limit,
@@ -81,10 +82,11 @@ export class TemplateService implements ITemplateService {
             image: true,
           },
         },
+        links: true,
       },
     });
 
-    return template as Template | null;
+    return template as unknown as Template | null;
   }
 
   async createTemplate(data: CreateTemplateInput): Promise<Template> {
@@ -107,6 +109,7 @@ export class TemplateService implements ITemplateService {
             image: true,
           },
         },
+        links: true,
       },
     });
 
@@ -116,7 +119,7 @@ export class TemplateService implements ITemplateService {
       data: { templateCount: { increment: 1 } },
     });
 
-    return template as Template;
+    return template as unknown as Template;
   }
 
   async updateTemplate(id: string, data: UpdateTemplateInput): Promise<Template | null> {
@@ -141,6 +144,7 @@ export class TemplateService implements ITemplateService {
             image: true,
           },
         },
+        links: true,
       },
     });
 
@@ -158,7 +162,7 @@ export class TemplateService implements ITemplateService {
       ]);
     }
 
-    return template as Template;
+    return template as unknown as Template;
   }
 
   async deleteTemplate(id: string): Promise<{ success: boolean; message: string }> {
@@ -182,6 +186,28 @@ export class TemplateService implements ITemplateService {
     });
 
     return { success: true, message: "Template deleted successfully" };
+  }
+
+  async getNewArrivals(limit: number = 20): Promise<Template[]> {
+    const templates = await prisma.template.findMany({
+      take: limit,
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        category: {
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            image: true,
+          },
+        },
+        links: true,
+      },
+    });
+
+    return templates as unknown as Template[];
   }
 
   async getTemplateStats(): Promise<TemplateStats> {

@@ -6,5 +6,6 @@ export interface ITemplateService {
   createTemplate(data: CreateTemplateInput): Promise<Template>;
   updateTemplate(id: string, data: UpdateTemplateInput): Promise<Template | null>;
   deleteTemplate(id: string): Promise<{ success: boolean; message: string }>;
+  getNewArrivals(limit?: number): Promise<Template[]>;
   getTemplateStats(): Promise<TemplateStats>;
 }

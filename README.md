@@ -18,26 +18,6 @@
 
 </div>
 
----
-
-## 📋 Table of Contents
-
-- [🎯 Project Overview](#-project-overview)
-- [✨ Key Features](#-key-features)
-- [🏗️ Architecture](#️-architecture)
-- [🛠️ Tech Stack](#️-tech-stack)
-- [📊 Database Schema](#-database-schema)
-- [🔗 API Endpoints](#-api-endpoints)
-- [🚀 Quick Start](#-quick-start)
-- [🔧 Environment Setup](#-environment-setup)
-- [📱 API Documentation](#-api-documentation)
-- [🔒 Security Features](#-security-features)
-- [📈 Performance & Monitoring](#-performance--monitoring)
-- [🚀 Deployment](#-deployment)
-- [🤝 Contributing](#-contributing)
-- [📄 License](#-license)
-
----
 
 ## 🎯 Project Overview
 

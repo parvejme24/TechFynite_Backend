@@ -282,6 +282,36 @@ export const downloadSourceFile = async (req: Request, res: Response) => {
   }
 };
 
+// Get new arrivals templates
+export const getNewArrivals = async (req: Request, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 20;
+
+    // Validate limit to ensure it's reasonable
+    if (limit < 1 || limit > 50) {
+      return res.status(400).json({
+        success: false,
+        message: "Limit must be between 1 and 50",
+      });
+    }
+
+    const templates = await templateService.getNewArrivals(limit);
+
+    return res.status(200).json({
+      success: true,
+      message: "New arrivals fetched successfully",
+      data: templates,
+    });
+  } catch (error: any) {
+    console.error("Error fetching new arrivals:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch new arrivals",
+      error: error.message,
+    });
+  }
+};
+
 // Get template statistics
 export const getTemplateStats = async (req: Request, res: Response) => {
   try {

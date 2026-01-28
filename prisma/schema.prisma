@@ -97,7 +97,7 @@ model Template {
   downloads             Int              @default(0)
   totalPurchase         Int              @default(0)
   categoryId            String
-  categoryName          String
+  categoryName          String?
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
   checkoutUrl           String?

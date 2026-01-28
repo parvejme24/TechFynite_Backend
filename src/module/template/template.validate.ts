@@ -3,7 +3,8 @@ import {
   createTemplateSchema,
   updateTemplateSchema,
   templateIdSchema,
-  templateQuerySchema
+  templateQuerySchema,
+  newArrivalsQuerySchema
 } from "./template.type";
 
 export const validateCreateTemplate = (req: Request, res: Response, next: NextFunction) => {
@@ -51,6 +52,20 @@ export const validateTemplateId = (req: Request, res: Response, next: NextFuncti
 export const validateTemplateQuery = (req: Request, res: Response, next: NextFunction) => {
   try {
     const validatedQuery = templateQuerySchema.parse(req.query);
+    (req as any).validatedQuery = validatedQuery;
+    return next();
+  } catch (error: any) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid query parameters",
+      errors: error.errors || error.message,
+    });
+  }
+};
+
+export const validateNewArrivalsQuery = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const validatedQuery = newArrivalsQuerySchema.parse(req.query);
     (req as any).validatedQuery = validatedQuery;
     return next();
   } catch (error: any) {

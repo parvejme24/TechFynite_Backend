@@ -5,6 +5,7 @@ import {
   createTemplate,
   updateTemplate,
   deleteTemplate,
+  getNewArrivals,
   getTemplateStats,
   downloadSourceFile,
 } from './template.controller';
@@ -15,12 +16,14 @@ import {
   validateUpdateTemplate,
   validateTemplateId,
   validateTemplateQuery,
+  validateNewArrivalsQuery,
 } from './template.validate';
 
 const router = Router();
 
 // Public routes
 router.get('/templates', validateTemplateQuery, getAllTemplates);
+router.get('/templates/new-arrivals', validateNewArrivalsQuery, getNewArrivals);
 router.get('/templates/stats', getTemplateStats);
 router.get('/templates/:id', validateTemplateId, getTemplateById);
 
