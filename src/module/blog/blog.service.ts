@@ -26,7 +26,7 @@ export class BlogService {
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
-        { description: { path: '$', string_contains: search } },
+        { description: { contains: search, mode: 'insensitive' } },
       ];
     }
     
@@ -71,6 +71,13 @@ export class BlogService {
             select: {
               id: true,
               userId: true,
+            },
+          },
+          reactions: {
+            select: {
+              id: true,
+              userId: true,
+              reactionType: true,
             },
           },
           reviews: {
@@ -122,6 +129,14 @@ export class BlogService {
           select: {
             id: true,
             userId: true,
+          },
+        },
+        reactions: {
+          select: {
+            id: true,
+            userId: true,
+            reactionType: true,
+            createdAt: true,
           },
         },
         reviews: {
@@ -301,7 +316,7 @@ export class BlogService {
         _sum: { viewCount: true },
       }),
       prisma.blog.aggregate({
-        _sum: { likes: true },
+        _sum: { reactCount: true },
       }),
       prisma.blog.aggregate({
         _avg: { readingTime: true },
@@ -321,7 +336,8 @@ export class BlogService {
       publishedBlogs,
       draftBlogs,
       totalViews: totalViews._sum.viewCount || 0,
-      totalLikes: totalLikes._sum.likes || 0,
+      totalLikes: totalLikes._sum.reactCount || 0,
+      totalReactions: totalLikes._sum.reactCount || 0,
       averageReadingTime: averageReadingTime._avg.readingTime || 0,
       blogsByCategory: blogsByCategory.map(item => ({
         categoryId: item.categoryId,
@@ -336,8 +352,13 @@ export class BlogService {
     };
   }
   
-  // Increment view count
-  public async incrementViewCount(id: string): Promise<void> {
+  // Increment view count (only for logged-in users)
+  public async incrementViewCount(id: string, userId?: string): Promise<void> {
+    // Only increment if user is logged in (userId provided)
+    if (!userId) {
+      return;
+    }
+    
     await prisma.blog.update({
       where: { id },
       data: {
@@ -348,7 +369,9 @@ export class BlogService {
     });
   }
   
-  // Toggle like
+  // Toggle like (legacy - kept for backward compatibility)
+  // Note: This uses BlogLike model, which is separate from BlogReaction
+  // For new features, use addReaction instead
   public async toggleLike(blogId: string, userId: string): Promise<{ liked: boolean; likes: number }> {
     const existingLike = await prisma.blogLike.findUnique({
       where: {
@@ -370,17 +393,12 @@ export class BlogService {
         },
       });
       
-      // Decrement likes count
-      await prisma.blog.update({
-        where: { id: blogId },
-        data: {
-          likes: {
-            decrement: 1,
-          },
-        },
+      // Get current like count
+      const likeCount = await prisma.blogLike.count({
+        where: { blogId },
       });
       
-      return { liked: false, likes: await this.getBlogLikesCount(blogId) };
+      return { liked: false, likes: likeCount };
     } else {
       // Like
       await prisma.blogLike.create({
@@ -390,28 +408,171 @@ export class BlogService {
         },
       });
       
-      // Increment likes count
+      // Get current like count
+      const likeCount = await prisma.blogLike.count({
+        where: { blogId },
+      });
+      
+      return { liked: true, likes: likeCount };
+    }
+  }
+  
+  // Get blog likes count (legacy - counts BlogLike records)
+  private async getBlogLikesCount(blogId: string): Promise<number> {
+    const count = await prisma.blogLike.count({
+      where: { blogId },
+    });
+    
+    return count;
+  }
+
+  // Add or update reaction
+  public async addReaction(blogId: string, userId: string, reactionType: 'LIKE' | 'LOVE' | 'HAHA' | 'WOW' | 'SAD' | 'ANGRY'): Promise<{ reaction: any; reactCount: number }> {
+    const existingReaction = await prisma.blogReaction.findUnique({
+      where: {
+        blogId_userId: {
+          blogId,
+          userId,
+        },
+      },
+    });
+
+    if (existingReaction) {
+      // Update existing reaction
+      if (existingReaction.reactionType === reactionType) {
+        // Same reaction, remove it
+        await prisma.blogReaction.delete({
+          where: {
+            blogId_userId: {
+              blogId,
+              userId,
+            },
+          },
+        });
+        
+        // Decrement react count
+        await prisma.blog.update({
+          where: { id: blogId },
+          data: {
+            reactCount: {
+              decrement: 1,
+            },
+          },
+        });
+        
+        const updatedBlog = await prisma.blog.findUnique({
+          where: { id: blogId },
+          select: { reactCount: true },
+        });
+        
+        return { reaction: null, reactCount: updatedBlog?.reactCount || 0 };
+      } else {
+        // Different reaction, update it
+        await prisma.blogReaction.update({
+          where: {
+            blogId_userId: {
+              blogId,
+              userId,
+            },
+          },
+          data: {
+            reactionType,
+          },
+        });
+        
+        // Count stays the same (just changed type)
+        const updatedBlog = await prisma.blog.findUnique({
+          where: { id: blogId },
+          select: { reactCount: true },
+        });
+        
+        const reaction = await prisma.blogReaction.findUnique({
+          where: {
+            blogId_userId: {
+              blogId,
+              userId,
+            },
+          },
+        });
+        
+        return { reaction, reactCount: updatedBlog?.reactCount || 0 };
+      }
+    } else {
+      // Create new reaction
+      await prisma.blogReaction.create({
+        data: {
+          blogId,
+          userId,
+          reactionType,
+        },
+      });
+      
+      // Increment react count
       await prisma.blog.update({
         where: { id: blogId },
         data: {
-          likes: {
+          reactCount: {
             increment: 1,
           },
         },
       });
       
-      return { liked: true, likes: await this.getBlogLikesCount(blogId) };
+      const updatedBlog = await prisma.blog.findUnique({
+        where: { id: blogId },
+        select: { reactCount: true },
+      });
+      
+      const reaction = await prisma.blogReaction.findUnique({
+        where: {
+          blogId_userId: {
+            blogId,
+            userId,
+          },
+        },
+      });
+      
+      return { reaction, reactCount: updatedBlog?.reactCount || 0 };
     }
   }
-  
-  // Get blog likes count
-  private async getBlogLikesCount(blogId: string): Promise<number> {
-    const result = await prisma.blog.findUnique({
-      where: { id: blogId },
-      select: { likes: true },
+
+  // Get reactions for a blog
+  public async getBlogReactions(blogId: string): Promise<any[]> {
+    const reactions = await prisma.blogReaction.findMany({
+      where: { blogId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
     
-    return result?.likes || 0;
+    return reactions;
+  }
+
+  // Get user's reaction for a blog
+  public async getUserReaction(blogId: string, userId: string): Promise<any | null> {
+    const reaction = await prisma.blogReaction.findUnique({
+      where: {
+        blogId_userId: {
+          blogId,
+          userId,
+        },
+      },
+    });
+    
+    return reaction;
   }
   
   // Update blog publish status

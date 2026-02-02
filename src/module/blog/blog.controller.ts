@@ -29,6 +29,8 @@ export const getAllBlogs = async (req: Request, res: Response) => {
 export const getBlogById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    // Get userId from request (if user is logged in)
+    const userId = (req as any).user?.id || (req as any).userId;
     
     const blog = await blogService.getBlogById(id);
     
@@ -40,8 +42,10 @@ export const getBlogById = async (req: Request, res: Response) => {
       });
     }
     
-    // Increment view count
-    await blogService.incrementViewCount(id);
+    // Increment view count only if user is logged in
+    if (userId) {
+      await blogService.incrementViewCount(id, userId);
+    }
     
     return res.status(200).json({
       success: true,
@@ -66,21 +70,9 @@ export const addBlog = async (req: Request, res: Response) => {
     
     // Parse JSON fields from form data
     if (req.headers['content-type']?.includes('application/x-www-form-urlencoded')) {
+      // Description is now a string field (no JSON parsing needed)
       
-      // Parse description if it's a string
-      if (blogData.description && typeof blogData.description === 'string') {
-        try {
-          blogData.description = JSON.parse(blogData.description);
-        } catch (e) {
-          return res.status(400).json({
-            success: false,
-            message: "Invalid description format. Must be valid JSON.",
-            error: "Description field must be a valid JSON string"
-          });
-        }
-      }
-      
-      // Parse content if it's a string
+      // Parse content if it's a string (rich text editor content)
       if (blogData.content && typeof blogData.content === 'string') {
         try {
           blogData.content = JSON.parse(blogData.content);
@@ -117,13 +109,13 @@ export const addBlog = async (req: Request, res: Response) => {
       if (mainImageFile) {
         try {
           const uploadedMain = await uploadBufferToCloudinary(mainImageFile, "techfynite/blogs");
-          blogData.imageUrl = uploadedMain.url;
-          console.log("✅ Main image uploaded successfully:", uploadedMain.url);
+          blogData.featuredImageUrl = uploadedMain.url;
+          console.log("✅ Featured image uploaded successfully:", uploadedMain.url);
         } catch (error) {
-          console.error("❌ Error uploading main image:", error);
+          console.error("❌ Error uploading featured image:", error);
           return res.status(500).json({
             success: false,
-            message: "Failed to upload main image",
+            message: "Failed to upload featured image",
             error: error instanceof Error ? error.message : "Unknown error",
           });
         }
@@ -146,20 +138,9 @@ export const addBlog = async (req: Request, res: Response) => {
       }
       
       // Parse JSON fields from multipart form data
-      // Parse description if it's a string
-      if (blogData.description && typeof blogData.description === 'string') {
-        try {
-          blogData.description = JSON.parse(blogData.description);
-        } catch (e) {
-          return res.status(400).json({
-            success: false,
-            message: "Invalid description format. Must be valid JSON.",
-            error: "Description field must be a valid JSON string"
-          });
-        }
-      }
+      // Description is now a string field (no JSON parsing needed)
       
-      // Parse content if it's a string
+      // Parse content if it's a string (rich text editor content)
       if (blogData.content && typeof blogData.content === 'string') {
         try {
           blogData.content = JSON.parse(blogData.content);
@@ -219,13 +200,13 @@ export const updateBlog = async (req: Request, res: Response) => {
       if (mainImageFile) {
         try {
           const uploadedMain = await uploadBufferToCloudinary(mainImageFile, "techfynite/blogs");
-          updateData.imageUrl = uploadedMain.url;
-          console.log("✅ Main image uploaded successfully:", uploadedMain.url);
+          updateData.featuredImageUrl = uploadedMain.url;
+          console.log("✅ Featured image uploaded successfully:", uploadedMain.url);
         } catch (error) {
-          console.error("❌ Error uploading main image:", error);
+          console.error("❌ Error uploading featured image:", error);
           return res.status(500).json({
             success: false,
-            message: "Failed to upload main image",
+            message: "Failed to upload featured image",
             error: error instanceof Error ? error.message : "Unknown error",
           });
         }
@@ -246,20 +227,9 @@ export const updateBlog = async (req: Request, res: Response) => {
       }
       
       // Parse JSON fields from multipart form data
-      // Parse description if it's a string
-      if (updateData.description && typeof updateData.description === 'string') {
-        try {
-          updateData.description = JSON.parse(updateData.description);
-        } catch (e) {
-          return res.status(400).json({
-            success: false,
-            message: "Invalid description format. Must be valid JSON.",
-            error: "Description field must be a valid JSON string"
-          });
-        }
-      }
+      // Description is now a string field (no JSON parsing needed)
       
-      // Parse content if it's a string
+      // Parse content if it's a string (rich text editor content)
       if (updateData.content && typeof updateData.content === 'string') {
         try {
           updateData.content = JSON.parse(updateData.content);
@@ -505,6 +475,90 @@ export const getDraftBlogs = async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch draft blogs",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Add or update reaction
+export const addBlogReaction = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { userId, reactionType } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+        data: null,
+      });
+    }
+    
+    const result = await blogService.addReaction(id, userId, reactionType);
+    
+    return res.status(200).json({
+      success: true,
+      message: result.reaction ? "Reaction added successfully" : "Reaction removed successfully",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error adding reaction:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to add reaction",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Get reactions for a blog
+export const getBlogReactions = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    const reactions = await blogService.getBlogReactions(id);
+    
+    return res.status(200).json({
+      success: true,
+      message: "Reactions fetched successfully",
+      data: reactions,
+    });
+  } catch (error) {
+    console.error("Error fetching reactions:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch reactions",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Get user's reaction for a blog
+export const getUserReaction = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = (req as any).user?.id || req.query.userId;
+    
+    if (!userId || typeof userId !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+        data: null,
+      });
+    }
+    
+    const reaction = await blogService.getUserReaction(id, userId);
+    
+    return res.status(200).json({
+      success: true,
+      message: "User reaction fetched successfully",
+      data: reaction,
+    });
+  } catch (error) {
+    console.error("Error fetching user reaction:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch user reaction",
       error: error instanceof Error ? error.message : "Unknown error",
     });
   }

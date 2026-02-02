@@ -30,6 +30,7 @@ model User {
   providerId              String?
   profile                 UserProfile?
   blogLikes               BlogLike[]        @relation("UserLikes")
+  blogReactions           BlogReaction[]    @relation("UserReactions")
   adminReplies            BlogReviewReply[] @relation("AdminReplies")
   blogReviews             BlogReview[]      @relation("UserReviews")
   blogs                   Blog[]            @relation("BlogAuthor")
@@ -97,17 +98,15 @@ model Template {
   downloads             Int              @default(0)
   totalPurchase         Int              @default(0)
   categoryId            String
-  categoryName          String?
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
   checkoutUrl           String?
-  
+  categoryName          String?
   licenses              License[]        @relation("TemplateLicenses")
   links                 Link[]           @relation("TemplateLinks")
   orders                OrderInvoice[]   @relation("TemplateOrders")
-  purchasedBy           User[]           @relation("UserPurchases")
-
   category              TemplateCategory @relation("CategoryTemplates", fields: [categoryId], references: [id])
+  purchasedBy           User[]           @relation("UserPurchases")
 
   @@index([categoryId])
   @@index([createdAt])
@@ -201,24 +200,26 @@ model BlogCategory {
 }
 
 model Blog {
-  id          String       @id @default(uuid())
-  title       String
-  categoryId  String
-  imageUrl    String?
-  description Json
-  likes       Int          @default(0)
-  readingTime Float
-  authorId    String
-  slug        String?      @unique
-  isPublished Boolean      @default(true)
-  viewCount   Int          @default(0)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  content     Json?
-  blogLikes   BlogLike[]   @relation("BlogLikes")
-  reviews     BlogReview[] @relation("BlogReviews")
-  author      User         @relation("BlogAuthor", fields: [authorId], references: [id], onDelete: Cascade)
-  category    BlogCategory @relation("CategoryBlogs", fields: [categoryId], references: [id], onDelete: Cascade)
+  id              String          @id @default(uuid())
+  title           String
+  categoryId      String
+  featuredImageUrl String?        @map("imageUrl") // Maps to existing imageUrl column
+  description     String          @db.Text
+  content         Json?           // Rich text editor content (headings, paragraphs, lists, images)
+  readingTime     Float
+  authorId        String
+  slug            String?         @unique
+  isPublished     Boolean         @default(true)
+  viewCount       Int             @default(0) // Incremented when logged-in user views details
+  likes           Int             @default(0) // Legacy field - kept for backward compatibility
+  reactCount      Int             @default(0) // Total count of all reactions
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  blogLikes       BlogLike[]      @relation("BlogLikes")
+  reactions       BlogReaction[]  @relation("BlogReactions")
+  reviews         BlogReview[]    @relation("BlogReviews")
+  author          User            @relation("BlogAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  category        BlogCategory    @relation("CategoryBlogs", fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@index([categoryId])
   @@index([authorId])
@@ -277,6 +278,23 @@ model BlogLike {
   @@index([blogId])
   @@index([userId])
   @@map("blog_likes")
+}
+
+model BlogReaction {
+  id           String        @id @default(uuid())
+  blogId       String
+  userId       String
+  reactionType ReactionType
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  blog         Blog          @relation("BlogReactions", fields: [blogId], references: [id], onDelete: Cascade)
+  user         User          @relation("UserReactions", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([blogId, userId]) // User can only have one reaction per blog (can update it)
+  @@index([blogId])
+  @@index([userId])
+  @@index([reactionType])
+  @@map("blog_reactions")
 }
 
 model Contact {
@@ -350,4 +368,13 @@ enum OrderStatus {
 enum LicenseType {
   SINGLE
   EXTENDED
+}
+
+enum ReactionType {
+  LIKE
+  LOVE
+  HAHA
+  WOW
+  SAD
+  ANGRY
 }

@@ -12,6 +12,9 @@ import {
   getPublishedBlogs,
   getDraftBlogs,
   togglePublish,
+  addBlogReaction,
+  getBlogReactions,
+  getUserReaction,
 } from "./blog.controller";
 import {
   validateBlogQuery,
@@ -21,6 +24,7 @@ import {
   validateCategoryId,
   validateAuthorId,
   validateBlogLike,
+  validateBlogReaction,
 } from "./blog.validate";
 import { uploadBlogImageCloudinary, handleUploadError } from "../../middleware/cloudinary-upload";
 
@@ -53,6 +57,11 @@ router.delete("/blogs/:id", validateBlogId, deleteBlog);
 
 // Blog likes
 router.post("/blogs/:id/toggle-like", validateBlogId, validateBlogLike, toggleBlogLike);
+
+// Blog reactions
+router.post("/blogs/:id/reactions", validateBlogId, validateBlogReaction, addBlogReaction);
+router.get("/blogs/:id/reactions", validateBlogId, getBlogReactions);
+router.get("/blogs/:id/reactions/user", validateBlogId, getUserReaction);
 
 // Blog status management
 router.patch("/blogs/:id/toggle-publish", validateBlogId, togglePublish);

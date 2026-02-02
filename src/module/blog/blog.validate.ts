@@ -7,7 +7,8 @@ import {
   categoryIdSchema, 
   authorIdSchema,
   blogLikeSchema,
-  blogStatusSchema
+  blogStatusSchema,
+  blogReactionSchema
 } from "./blog.type";
 
 // Validate blog creation
@@ -133,6 +134,22 @@ export const validateBlogLike = (req: Request, res: Response, next: NextFunction
 export const validateBlogStatus = (req: Request, res: Response, next: NextFunction) => {
   try {
     const validatedData = blogStatusSchema.parse(req.body);
+    req.body = validatedData;
+    next();
+    return;
+  } catch (error: any) {
+    return res.status(400).json({
+      success: false,
+      message: "Validation failed",
+      error: error.errors || error.message,
+    });
+  }
+};
+
+// Validate blog reaction
+export const validateBlogReaction = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const validatedData = blogReactionSchema.parse(req.body);
     req.body = validatedData;
     next();
     return;

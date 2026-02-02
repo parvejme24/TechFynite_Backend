@@ -4,8 +4,8 @@ import { z } from "zod";
 export const createBlogSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title must be less than 200 characters"),
   categoryId: z.string().uuid("Invalid category ID"),
-  imageUrl: z.string().url("Invalid image URL").optional(),
-  description: z.any().optional(), // JSON field
+  featuredImageUrl: z.string().url("Invalid image URL").optional(),
+  description: z.string().min(1, "Description is required"), // Text field for multiple paragraphs
   // Accept string or number; store as number
   readingTime: z.union([
     z.number(),
@@ -17,15 +17,15 @@ export const createBlogSchema = z.object({
     z.boolean(),
     z.string().transform((val) => val === 'true')
   ]).optional().default(false), // Default to draft
-  content: z.any().optional(), // JSON field
+  content: z.any().optional(), // JSON field for rich text editor
 });
 
 // Blog update schema
 export const updateBlogSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title must be less than 200 characters").optional(),
   categoryId: z.string().uuid("Invalid category ID").optional(),
-  imageUrl: z.string().url("Invalid image URL").optional(),
-  description: z.any().optional(), // JSON field
+  featuredImageUrl: z.string().url("Invalid image URL").optional(),
+  description: z.string().min(1, "Description cannot be empty").optional(), // Text field
   readingTime: z.union([
     z.number(),
     z.string().regex(/^\d+(\.\d+)?$/).transform(Number)
@@ -35,7 +35,7 @@ export const updateBlogSchema = z.object({
     z.boolean(),
     z.string().transform((val) => val === 'true')
   ]).optional(),
-  content: z.any().optional(), // JSON field
+  content: z.any().optional(), // JSON field for rich text editor
 });
 
 // Blog query schema
@@ -46,7 +46,7 @@ export const blogQuerySchema = z.object({
   categoryId: z.string().uuid("Invalid category ID").optional(),
   authorId: z.string().uuid("Invalid author ID").optional(),
   isPublished: z.string().transform(Boolean).optional(),
-  sortBy: z.enum(['createdAt', 'updatedAt', 'likes', 'viewCount', 'readingTime']).optional().default('createdAt'),
+  sortBy: z.enum(['createdAt', 'updatedAt', 'reactCount', 'viewCount', 'readingTime']).optional().default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
 });
 
@@ -75,6 +75,12 @@ export const blogStatusSchema = z.object({
   status: z.enum(['draft', 'published']),
 });
 
+// Blog reaction schema
+export const blogReactionSchema = z.object({
+  userId: z.string().uuid("Invalid user ID"),
+  reactionType: z.enum(['LIKE', 'LOVE', 'HAHA', 'WOW', 'SAD', 'ANGRY']),
+});
+
 // Type exports
 export type CreateBlogType = z.infer<typeof createBlogSchema>;
 export type UpdateBlogType = z.infer<typeof updateBlogSchema>;
@@ -84,3 +90,4 @@ export type CategoryIdType = z.infer<typeof categoryIdSchema>;
 export type AuthorIdType = z.infer<typeof authorIdSchema>;
 export type BlogLikeType = z.infer<typeof blogLikeSchema>;
 export type BlogStatusType = z.infer<typeof blogStatusSchema>;
+export type BlogReactionType = z.infer<typeof blogReactionSchema>;

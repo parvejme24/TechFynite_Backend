@@ -1,10 +1,11 @@
-import { Blog, BlogCategory, User, BlogLike, BlogReview } from "@prisma/client";
+import { Blog, BlogCategory, User, BlogLike, BlogReview, BlogReaction } from "@prisma/client";
 
 // Base Blog interface
 export interface IBlog extends Blog {
   author?: User;
   category?: BlogCategory;
   blogLikes?: BlogLike[];
+  reactions?: BlogReaction[];
   reviews?: BlogReview[];
 }
 
@@ -12,21 +13,21 @@ export interface IBlog extends Blog {
 export interface ICreateBlog {
   title: string;
   categoryId: string;
-  imageUrl?: string;
-  description: any; // JSON field
+  featuredImageUrl?: string;
+  description: string; // Text field for multiple paragraphs
   readingTime: number;
   authorId: string;
   slug?: string;
   isPublished?: boolean;
-  content?: any; // JSON field
+  content?: any; // JSON field for rich text editor
 }
 
 // Blog update interface
 export interface IUpdateBlog {
   title?: string;
   categoryId?: string;
-  imageUrl?: string;
-  description?: any;
+  featuredImageUrl?: string;
+  description?: string;
   readingTime?: number;
   slug?: string;
   isPublished?: boolean;
@@ -41,7 +42,7 @@ export interface IBlogQuery {
   categoryId?: string;
   authorId?: string;
   isPublished?: boolean;
-  sortBy?: 'createdAt' | 'updatedAt' | 'likes' | 'viewCount' | 'readingTime';
+  sortBy?: 'createdAt' | 'updatedAt' | 'reactCount' | 'viewCount' | 'readingTime';
   sortOrder?: 'asc' | 'desc';
 }
 
@@ -67,6 +68,7 @@ export interface IBlogStats {
   draftBlogs: number;
   totalViews: number;
   totalLikes: number;
+  totalReactions: number;
   averageReadingTime: number;
   blogsByCategory: Array<{
     categoryId: string;
@@ -78,4 +80,11 @@ export interface IBlogStats {
     authorName: string;
     count: number;
   }>;
+}
+
+// Blog reaction interface
+export interface IBlogReaction {
+  blogId: string;
+  userId: string;
+  reactionType: 'LIKE' | 'LOVE' | 'HAHA' | 'WOW' | 'SAD' | 'ANGRY';
 }
