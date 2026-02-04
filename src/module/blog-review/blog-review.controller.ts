@@ -8,14 +8,16 @@ export const createBlogReview = async (req: Request, res: Response) => {
     const { blogId } = req.params;
     const reviewData = { ...req.body, blogId };
 
-    // Check if user has already reviewed this blog
-    const hasReviewed = await blogReviewService.hasUserReviewed(blogId, reviewData.userId);
-    if (hasReviewed) {
-      return res.status(400).json({
-        success: false,
-        message: "You have already reviewed this blog",
-        error: "Duplicate review not allowed"
-      });
+    // Check if user has already reviewed this blog (only if userId is provided)
+    if (reviewData.userId) {
+      const hasReviewed = await blogReviewService.hasUserReviewed(blogId, reviewData.userId);
+      if (hasReviewed) {
+        return res.status(400).json({
+          success: false,
+          message: "You have already reviewed this blog",
+          error: "Duplicate review not allowed"
+        });
+      }
     }
 
     const review = await blogReviewService.createBlogReview(reviewData);

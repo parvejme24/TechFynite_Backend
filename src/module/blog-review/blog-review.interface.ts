@@ -1,8 +1,8 @@
 export interface IBlogReview {
   id: string;
   blogId: string;
-  userId: string;
-  rating: number;
+  userId?: string | null;
+  rating?: number | null;
   commentText: string;
   fullName: string;
   email: string;
@@ -29,10 +29,11 @@ export interface IBlogReviewReply {
 export interface ICreateBlogReview {
   blogId: string;
   userId?: string;
-  rating: number;
+  rating?: number;
   commentText: string;
   fullName: string;
   email: string;
+  photoUrl?: string;
 }
 
 export interface ICreateBlogReviewReply {
@@ -49,7 +50,6 @@ export interface IBlogReviewQuery {
   blogId?: string;
   userId?: string;
   rating?: number;
-  isApproved?: boolean;
   sortBy?: 'createdAt' | 'rating' | 'updatedAt';
   sortOrder?: 'asc' | 'desc';
 }

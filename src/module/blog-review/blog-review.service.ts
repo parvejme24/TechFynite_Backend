@@ -16,12 +16,12 @@ export class BlogReviewService {
       commentText: data.commentText,
       fullName: data.fullName,
       email: data.email,
-      rating: (data as any).rating ?? null,
-      photoUrl: (data as any).photoUrl ?? null,
+      rating: data.rating ?? null,
+      photoUrl: data.photoUrl ?? null,
       blog: { connect: { id: data.blogId } },
     };
-    if ((data as any).userId) {
-      createData.user = { connect: { id: (data as any).userId } };
+    if (data.userId) {
+      createData.user = { connect: { id: data.userId } };
     }
     const review = await prisma.blogReview.create({
       data: createData,
@@ -56,7 +56,7 @@ export class BlogReviewService {
       hasPrev: boolean;
     };
   }> {
-    const { page = 1, limit = 10, blogId, userId, rating, isApproved, sortBy = 'createdAt', sortOrder = 'desc' } = query;
+    const { page = 1, limit = 10, blogId, userId, rating, sortBy = 'createdAt', sortOrder = 'desc' } = query;
     
     const skip = (page - 1) * limit;
     
@@ -73,10 +73,6 @@ export class BlogReviewService {
     
     if (rating) {
       where.rating = rating;
-    }
-    
-    if (typeof isApproved === 'boolean') {
-      where.isApproved = isApproved;
     }
     
     // Build orderBy clause
@@ -177,14 +173,10 @@ export class BlogReviewService {
 
     const [
       totalReviews,
-      approvedReviews,
-      pendingReviews,
       averageRating,
       ratingDistribution,
       totalReplies,
     ] = await Promise.all([
-      prisma.blogReview.count({ where }),
-      prisma.blogReview.count({ where }),
       prisma.blogReview.count({ where }),
       prisma.blogReview.aggregate({
         where,
@@ -208,7 +200,6 @@ export class BlogReviewService {
         count: (item._count as any).id as number,
       })),
       totalReplies,
-      // Approval counts not tracked in schema; duplicating total for both for now
     };
   }
 
