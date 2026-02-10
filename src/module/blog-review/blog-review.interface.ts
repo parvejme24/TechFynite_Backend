@@ -7,6 +7,7 @@ export interface IBlogReview {
   fullName: string;
   email: string;
   photoUrl?: string | null;
+  isHidden: boolean;
   createdAt: Date;
   updatedAt: Date;
   replies?: IBlogReviewReply[];
@@ -52,6 +53,14 @@ export interface IBlogReviewQuery {
   rating?: number;
   sortBy?: 'createdAt' | 'rating' | 'updatedAt';
   sortOrder?: 'asc' | 'desc';
+}
+
+export interface IUpdateBlogReview {
+  rating?: number;
+  commentText?: string;
+  fullName?: string;
+  email?: string;
+  photoUrl?: string;
 }
 
 export interface IBlogReviewStats {

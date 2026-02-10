@@ -19,7 +19,7 @@ export const prismaConfig = {
   },
 }
 
-// Try to use adapter approach if available, fallback to direct connection
+// Prisma 7 requires connection via adapter or datasources config
 let prismaClientConfig: any = {
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   errorFormat: 'pretty',
@@ -28,7 +28,7 @@ let prismaClientConfig: any = {
 let pool: any = null
 
 try {
-  // Dynamic import for adapter packages (they may not be installed yet)
+  // Try to use adapter approach (recommended for Prisma 7)
   const { PrismaPg } = require('@prisma/adapter-pg')
   const { Pool } = require('pg')
 
@@ -42,7 +42,8 @@ try {
 
   console.log('✅ Using Prisma PostgreSQL adapter')
 } catch (error) {
-  // Fallback to direct connection (for environments where adapter isn't available)
+  // Fallback: Use datasources config for Prisma 7
+  // This is the correct way to pass connection URL in Prisma 7 when adapter is not available
   prismaClientConfig = {
     ...prismaClientConfig,
     datasources: {
@@ -52,7 +53,7 @@ try {
     },
   }
 
-  console.log('⚠️  Using direct database connection (Prisma adapter not available)')
+  console.log('⚠️  Using datasources config (Prisma adapter not available)')
 }
 
 // Prisma client instance

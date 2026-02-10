@@ -58,6 +58,11 @@ export class BlogService {
               id: true,
               fullName: true,
               email: true,
+              profile: {
+                select: {
+                  avatarUrl: true,
+                },
+              },
             },
           },
           category: {
@@ -116,6 +121,11 @@ export class BlogService {
             id: true,
             fullName: true,
             email: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+              },
+            },
           },
         },
         category: {
@@ -176,6 +186,11 @@ export class BlogService {
             id: true,
             fullName: true,
             email: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+              },
+            },
           },
         },
         category: {
@@ -223,6 +238,11 @@ export class BlogService {
             id: true,
             fullName: true,
             email: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+              },
+            },
           },
         },
         category: {
@@ -582,7 +602,16 @@ export class BlogService {
       data: { isPublished },
       include: {
         author: {
-          select: { id: true, fullName: true, email: true },
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+              },
+            },
+          },
         },
         category: {
           select: { id: true, title: true, slug: true },
@@ -602,7 +631,18 @@ export class BlogService {
       where: { id },
       data: { isPublished: !existing.isPublished },
       include: {
-        author: { select: { id: true, fullName: true, email: true } },
+        author: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+              },
+            },
+          },
+        },
         category: { select: { id: true, title: true, slug: true } },
       },
     });

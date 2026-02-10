@@ -49,6 +49,29 @@ export const blogIdParamSchema = z.object({
   blogId: z.string().uuid("Invalid blog ID"),
 });
 
+// Blog review reply ID parameter schema
+export const blogReviewReplyIdSchema = z.object({
+  replyId: z.string().uuid("Invalid reply ID"),
+});
+
+// Blog review update schema
+export const updateBlogReviewSchema = z.object({
+  rating: z
+    .union([
+      z.number(),
+      z.string().regex(/^\d+$/, "Rating must be a number between 1-5").transform(Number),
+    ])
+    .transform((v) => (typeof v === 'string' ? Number(v) : v))
+    .pipe(z.number().min(1).max(5))
+    .optional(),
+  commentText: z.string().min(1, "Comment is required").max(1000, "Comment must be less than 1000 characters").optional(),
+  fullName: z.string().min(1, "Full name is required").max(100, "Full name must be less than 100 characters").optional(),
+  email: z.string().email("Invalid email address").optional(),
+  photoUrl: z.string().url("Invalid photo URL").optional().nullable(),
+}).refine((data) => Object.keys(data).length > 0, {
+  message: "At least one field must be provided for update",
+});
+
 // Review approval schema
 // Approval schema removed to match Prisma model
 
@@ -58,3 +81,5 @@ export type CreateBlogReviewReplyType = z.infer<typeof createBlogReviewReplySche
 export type BlogReviewQueryType = z.infer<typeof blogReviewQuerySchema>;
 export type BlogReviewIdType = z.infer<typeof blogReviewIdSchema>;
 export type BlogIdParamType = z.infer<typeof blogIdParamSchema>;
+export type BlogReviewReplyIdType = z.infer<typeof blogReviewReplyIdSchema>;
+export type UpdateBlogReviewType = z.infer<typeof updateBlogReviewSchema>;

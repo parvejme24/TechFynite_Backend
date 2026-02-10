@@ -18,7 +18,6 @@
 
 </div>
 
-
 ## 🎯 Project Overview
 
 **TechFynite Backend** is a robust, scalable REST API built for a modern e-commerce platform specializing in digital templates and content management. The system handles user authentication, template sales, blog management, order processing, and customer support with enterprise-grade security and performance.
@@ -37,6 +36,7 @@
 ## ✨ Key Features
 
 ### 🔐 Authentication & User Management
+
 - **Multi-provider Authentication**: Email/password, Google OAuth
 - **OTP Verification**: Secure email-based verification
 - **Role-based Access Control**: Admin, User, and Super Admin roles
@@ -45,6 +45,7 @@
 - **Account Security**: Password reset, account banning, soft deletion
 
 ### 🛒 E-commerce & Template Management
+
 - **Template Marketplace**: Digital template sales with categories
 - **Payment Integration**: LemonSqueezy payment gateway
 - **Order Management**: Complete order lifecycle tracking
@@ -53,6 +54,7 @@
 - **Template Categories**: Organized product catalog
 
 ### 📝 Content Management System
+
 - **Blog System**: Rich text editor, categories, tags
 - **Review System**: User reviews with admin replies
 - **Like System**: Social engagement features
@@ -60,12 +62,14 @@
 - **SEO Optimization**: Meta tags, slugs, structured data
 
 ### 📞 Customer Support
+
 - **Contact System**: Multi-channel customer support
 - **Newsletter Management**: Email subscription system
 - **Admin Dashboard**: Comprehensive management interface
 - **Reply System**: Threaded conversations
 
 ### 🔒 Security & Performance
+
 - **Rate Limiting**: API protection against abuse
 - **XSS Protection**: Input sanitization and validation
 - **CORS Configuration**: Secure cross-origin requests
@@ -84,21 +88,21 @@ graph TB
     C --> D[Rate Limiting]
     D --> E[Security Headers]
     E --> F[Route Handlers]
-    
+
     F --> G[Auth Module]
     F --> H[Blog Module]
     F --> I[Template Module]
     F --> J[Order Module]
     F --> K[Contact Module]
-    
+
     G --> L[Prisma ORM]
     H --> L
     I --> L
     J --> L
     K --> L
-    
+
     L --> M[PostgreSQL Database]
-    
+
     N[Cloudinary] --> O[Image Storage]
     P[LemonSqueezy] --> Q[Payment Processing]
     R[Nodemailer] --> S[Email Service]
@@ -128,6 +132,7 @@ src/
 ## 🛠️ Tech Stack
 
 ### 🎯 Core Technologies
+
 - **Node.js** - JavaScript runtime
 - **TypeScript** - Type-safe JavaScript
 - **Express.js** - Web application framework
@@ -135,11 +140,13 @@ src/
 - **PostgreSQL** - Relational database
 
 ### 🔧 Development Tools
+
 - **Nodemon** - Development server
 - **Rimraf** - Cross-platform file deletion
 - **Morgan** - HTTP request logger
 
 ### 🛡️ Security & Validation
+
 - **Helmet** - Security headers
 - **CORS** - Cross-origin resource sharing
 - **Express Rate Limit** - API rate limiting
@@ -148,6 +155,7 @@ src/
 - **Bcrypt** - Password hashing
 
 ### ☁️ External Services
+
 - **Cloudinary** - Image and video management
 - **LemonSqueezy** - Payment processing
 - **Nodemailer** - Email service
@@ -157,18 +165,23 @@ src/
 
 ## 📊 Database Schema
 
+## 🧩 Database Diagram
+
+![Database Schema Diagram](./assets/db.png)
+
 ### 🗃️ Core Entities
 
-| Entity | Purpose | Key Features |
-|--------|---------|--------------|
-| **User** | User management | Authentication, profiles, roles |
-| **Template** | Digital products | Categories, pricing, licensing |
-| **Blog** | Content management | Categories, reviews, analytics |
-| **Order** | E-commerce | Payment tracking, fulfillment |
-| **License** | Digital rights | Usage tracking, validation |
-| **Contact** | Customer support | Multi-channel communication |
+| Entity       | Purpose            | Key Features                    |
+| ------------ | ------------------ | ------------------------------- |
+| **User**     | User management    | Authentication, profiles, roles |
+| **Template** | Digital products   | Categories, pricing, licensing  |
+| **Blog**     | Content management | Categories, reviews, analytics  |
+| **Order**    | E-commerce         | Payment tracking, fulfillment   |
+| **License**  | Digital rights     | Usage tracking, validation      |
+| **Contact**  | Customer support   | Multi-channel communication     |
 
 ### 🔗 Key Relationships
+
 - **User ↔ Template**: Purchase history, favorites
 - **User ↔ Blog**: Author relationships, likes
 - **Template ↔ Order**: Sales tracking
@@ -179,6 +192,7 @@ src/
 ## 🔗 API Endpoints
 
 ### 🔐 Authentication (`/api/v1/auth`)
+
 ```http
 POST   /register          # User registration
 POST   /login             # User login
@@ -193,6 +207,7 @@ GET    /me                # Get current user
 ```
 
 ### 📝 Blog Management (`/api/v1/blogs`)
+
 ```http
 GET    /blogs             # Get all blogs
 GET    /blogs/:id         # Get blog by ID
@@ -204,6 +219,7 @@ POST   /blogs/:id/like    # Toggle blog like
 ```
 
 ### 🛒 Template Marketplace (`/api/v1/templates`)
+
 ```http
 GET    /templates         # Get all templates
 GET    /templates/:id     # Get template by ID
@@ -214,6 +230,7 @@ GET    /templates/category/:id # Get by category
 ```
 
 ### 📦 Order Management (`/api/v1/orders`)
+
 ```http
 GET    /orders            # Get all orders
 GET    /orders/:id        # Get order by ID
@@ -224,6 +241,7 @@ GET    /orders/stats      # Get order statistics
 ```
 
 ### 📞 Contact & Support (`/api/v1/contacts`)
+
 ```http
 POST   /contacts          # Submit contact form
 GET    /contacts          # Get all contacts (Admin)
@@ -237,6 +255,7 @@ DELETE /contacts/:id      # Delete contact (Admin)
 ## 🚀 Quick Start
 
 ### 📋 Prerequisites
+
 - Node.js (v18+)
 - PostgreSQL database
 - npm or yarn package manager
@@ -244,29 +263,34 @@ DELETE /contacts/:id      # Delete contact (Admin)
 ### 🚀 Installation
 
 1. **Clone the repository**
+
 ```bash
 git clone https://github.com/yourusername/techfynite-backend.git
 cd techfynite-backend
 ```
 
 2. **Install dependencies**
+
 ```bash
 npm install
 ```
 
 3. **Environment setup**
+
 ```bash
 cp .env.example .env
 # Configure your environment variables
 ```
 
 4. **Database setup**
+
 ```bash
 npx prisma generate
 npx prisma db push
 ```
 
 5. **Start development server**
+
 ```bash
 npm run dev
 ```
@@ -324,6 +348,7 @@ Visit the live API documentation: [API Docs](https://techfynite.vercel.app/api-d
 ### 📋 Request/Response Examples
 
 #### 🔐 User Registration
+
 ```http
 POST /api/v1/auth/register
 Content-Type: application/json
@@ -336,6 +361,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -352,6 +378,7 @@ Content-Type: application/json
 ```
 
 #### 📝 Create Blog Post
+
 ```http
 POST /api/v1/blogs
 Authorization: Bearer <jwt-token>
@@ -390,22 +417,24 @@ All API responses follow this structure:
 
 ### 🛡️ Multi-layer Security
 
-| Security Layer | Implementation | Purpose |
-|----------------|----------------|---------|
-| **Authentication** | JWT tokens with refresh | Secure user sessions |
-| **Authorization** | Role-based access control | Granular permissions |
-| **Rate Limiting** | 100 requests/hour per IP | Prevent API abuse |
-| **Input Validation** | Zod schema validation | Prevent malicious input |
-| **XSS Protection** | Express XSS sanitizer | Cross-site scripting prevention |
-| **CORS** | Configured origins | Cross-origin request control |
-| **Helmet** | Security headers | HTTP security enhancement |
+| Security Layer       | Implementation            | Purpose                         |
+| -------------------- | ------------------------- | ------------------------------- |
+| **Authentication**   | JWT tokens with refresh   | Secure user sessions            |
+| **Authorization**    | Role-based access control | Granular permissions            |
+| **Rate Limiting**    | 100 requests/hour per IP  | Prevent API abuse               |
+| **Input Validation** | Zod schema validation     | Prevent malicious input         |
+| **XSS Protection**   | Express XSS sanitizer     | Cross-site scripting prevention |
+| **CORS**             | Configured origins        | Cross-origin request control    |
+| **Helmet**           | Security headers          | HTTP security enhancement       |
 
 ### 🔐 Password Security
+
 - **Bcrypt hashing** with salt rounds
 - **Password strength validation**
 - **Secure password reset** via OTP
 
 ### 🚫 Data Protection
+
 - **Input sanitization** for all user inputs
 - **SQL injection prevention** via Prisma ORM
 - **Sensitive data encryption** in transit and at rest
@@ -415,18 +444,21 @@ All API responses follow this structure:
 ## 📈 Performance & Monitoring
 
 ### ⚡ Performance Optimizations
+
 - **Database indexing** on frequently queried fields
 - **Connection pooling** for database connections
 - **Response compression** for large payloads
 - **Efficient querying** with Prisma ORM
 
 ### 📊 Monitoring & Logging
+
 - **Request logging** with Morgan
 - **Error tracking** with comprehensive error handling
 - **Performance metrics** for API endpoints
 - **Database query optimization**
 
 ### 🎯 Scalability Features
+
 - **Stateless architecture** for horizontal scaling
 - **Database connection management**
 - **Efficient caching strategies**
@@ -461,11 +493,13 @@ The application is deployed on **Vercel** with the following configuration:
 ### 🔧 Deployment Steps
 
 1. **Build the application**
+
 ```bash
 npm run vercel-build
 ```
 
 2. **Deploy to Vercel**
+
 ```bash
 vercel --prod
 ```
@@ -488,26 +522,35 @@ vercel --prod
 
 1. **Fork the repository**
 2. **Create a feature branch**
+
 ```bash
 git checkout -b feature/amazing-feature
 ```
+
 3. **Make your changes**
 4. **Run tests and linting**
+
 ```bash
 npm run test
 npm run lint
 ```
+
 5. **Commit your changes**
+
 ```bash
 git commit -m "Add amazing feature"
 ```
+
 6. **Push to the branch**
+
 ```bash
 git push origin feature/amazing-feature
 ```
+
 7. **Open a Pull Request**
 
 ### 📋 Code Standards
+
 - **TypeScript** for type safety
 - **ESLint** for code quality
 - **Prettier** for code formatting

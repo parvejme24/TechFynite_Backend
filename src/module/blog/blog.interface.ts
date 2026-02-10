@@ -1,8 +1,18 @@
 import { Blog, BlogCategory, User, BlogLike, BlogReview, BlogReaction } from "@prisma/client";
 
+// Author with profile type for blog responses
+export interface IBlogAuthor {
+  id: string;
+  fullName: string;
+  email: string;
+  profile?: {
+    avatarUrl: string | null;
+  } | null;
+}
+
 // Base Blog interface
 export interface IBlog extends Blog {
-  author?: User;
+  author?: IBlogAuthor | User;
   category?: BlogCategory;
   blogLikes?: BlogLike[];
   reactions?: BlogReaction[];

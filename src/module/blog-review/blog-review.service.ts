@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { IBlogReview, ICreateBlogReview, ICreateBlogReviewReply, IBlogReviewQuery, IBlogReviewStats } from "./blog-review.interface";
+import { IBlogReview, ICreateBlogReview, ICreateBlogReviewReply, IBlogReviewQuery, IBlogReviewStats, IUpdateBlogReview } from "./blog-review.interface";
 
 const prisma = new PrismaClient();
 
@@ -45,7 +45,7 @@ export class BlogReviewService {
   }
 
   // Get blog reviews with pagination and filtering
-  public async getBlogReviews(query: IBlogReviewQuery): Promise<{
+  public async getBlogReviews(query: IBlogReviewQuery, isAdmin: boolean = false): Promise<{
     reviews: IBlogReview[];
     pagination: {
       page: number;
@@ -75,34 +75,78 @@ export class BlogReviewService {
       where.rating = rating;
     }
     
+    // Filter out hidden reviews for non-admin users
+    if (!isAdmin) {
+      where.isHidden = false;
+    }
+    
     // Build orderBy clause
     const orderBy: any = {};
     orderBy[sortBy] = sortOrder;
     
-    const [reviews, total] = await Promise.all([
-      prisma.blogReview.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy,
-        include: { replies: true },
-      }),
-      prisma.blogReview.count({ where }),
-    ]);
-    
-    const totalPages = Math.ceil(total / limit);
-    
-    return {
-      reviews: reviews as IBlogReview[],
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-        hasNext: page < totalPages,
-        hasPrev: page > 1,
-      },
-    };
+    try {
+      const [reviews, total] = await Promise.all([
+        prisma.blogReview.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy,
+          include: { replies: true },
+        }),
+        prisma.blogReview.count({ where }),
+      ]);
+      
+      const totalPages = Math.ceil(total / limit);
+      
+      return {
+        reviews: reviews as IBlogReview[],
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      };
+    } catch (error: any) {
+      // If isHidden field doesn't exist in database, retry without the filter
+      if (error.message && (error.message.includes('isHidden') || error.message.includes('Unknown column'))) {
+        console.warn('⚠️  isHidden field not found in database. Fetching without filter. Please run migration: npx prisma migrate dev');
+        
+        // Remove isHidden filter and retry
+        const whereWithoutHidden: any = {};
+        if (blogId) whereWithoutHidden.blogId = blogId;
+        if (userId) whereWithoutHidden.userId = userId;
+        if (rating) whereWithoutHidden.rating = rating;
+        
+        const [reviews, total] = await Promise.all([
+          prisma.blogReview.findMany({
+            where: whereWithoutHidden,
+            skip,
+            take: limit,
+            orderBy,
+            include: { replies: true },
+          }),
+          prisma.blogReview.count({ where: whereWithoutHidden }),
+        ]);
+        
+        const totalPages = Math.ceil(total / limit);
+        
+        return {
+          reviews: reviews as IBlogReview[],
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages,
+            hasNext: page < totalPages,
+            hasPrev: page > 1,
+          },
+        };
+      }
+      throw error;
+    }
   }
 
   // Get blog review by ID
@@ -116,7 +160,7 @@ export class BlogReviewService {
   }
 
   // Get reviews by blog ID
-  public async getReviewsByBlogId(blogId: string, query: IBlogReviewQuery): Promise<{
+  public async getReviewsByBlogId(blogId: string, query: IBlogReviewQuery, isAdmin: boolean = false): Promise<{
     reviews: IBlogReview[];
     pagination: {
       page: number;
@@ -127,7 +171,96 @@ export class BlogReviewService {
       hasPrev: boolean;
     };
   }> {
-    return this.getBlogReviews({ ...query, blogId });
+    return this.getBlogReviews({ ...query, blogId }, isAdmin);
+  }
+
+  // Update blog review
+  public async updateBlogReview(id: string, data: IUpdateBlogReview): Promise<IBlogReview> {
+    const updateData: any = {};
+    
+    if (data.rating !== undefined) {
+      updateData.rating = data.rating;
+    }
+    if (data.commentText !== undefined) {
+      updateData.commentText = data.commentText;
+    }
+    if (data.fullName !== undefined) {
+      updateData.fullName = data.fullName;
+    }
+    if (data.email !== undefined) {
+      updateData.email = data.email;
+    }
+    if (data.photoUrl !== undefined) {
+      updateData.photoUrl = data.photoUrl;
+    }
+
+    const review = await prisma.blogReview.update({
+      where: { id },
+      data: updateData,
+      include: { replies: true },
+    });
+
+    return review as IBlogReview;
+  }
+
+  // Hide blog review (admin only)
+  public async hideBlogReview(id: string): Promise<IBlogReview> {
+    try {
+      const review = await prisma.blogReview.update({
+        where: { id },
+        data: { isHidden: true } as any,
+        include: { replies: true },
+      });
+
+      return review as IBlogReview;
+    } catch (error: any) {
+      if (error.message && (error.message.includes('isHidden') || error.message.includes('Unknown column'))) {
+        throw new Error('isHidden field does not exist in database. Please run migration: npx prisma migrate dev');
+      }
+      throw error;
+    }
+  }
+
+  // Unhide blog review (admin only)
+  public async unhideBlogReview(id: string): Promise<IBlogReview> {
+    try {
+      const review = await prisma.blogReview.update({
+        where: { id },
+        data: { isHidden: false } as any,
+        include: { replies: true },
+      });
+
+      return review as IBlogReview;
+    } catch (error: any) {
+      if (error.message && (error.message.includes('isHidden') || error.message.includes('Unknown column'))) {
+        throw new Error('isHidden field does not exist in database. Please run migration: npx prisma migrate dev');
+      }
+      throw error;
+    }
+  }
+
+  // Delete all reviews for a blog (admin only)
+  public async deleteAllReviewsByBlogId(blogId: string): Promise<number> {
+    // First delete all replies for reviews of this blog
+    const reviews = await prisma.blogReview.findMany({
+      where: { blogId },
+      select: { id: true },
+    });
+
+    const reviewIds = reviews.map(r => r.id);
+    
+    if (reviewIds.length > 0) {
+      await prisma.blogReviewReply.deleteMany({
+        where: { reviewId: { in: reviewIds } },
+      });
+    }
+
+    // Then delete all reviews
+    const result = await prisma.blogReview.deleteMany({
+      where: { blogId },
+    });
+
+    return result.count;
   }
 
   // Update review approval status

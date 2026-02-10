@@ -72,7 +72,9 @@ export const createBlogReviewReply = async (req: Request, res: Response) => {
 export const getBlogReviews = async (req: Request, res: Response) => {
   try {
     const query: IBlogReviewQuery = (req as any).validatedQuery || req.query;
-    const result = await blogReviewService.getBlogReviews(query);
+    const user = (req as any).user;
+    const isAdmin = user?.role === 'ADMIN';
+    const result = await blogReviewService.getBlogReviews(query, isAdmin);
 
     return res.status(200).json({
       success: true,
@@ -95,8 +97,10 @@ export const getReviewsByBlogId = async (req: Request, res: Response) => {
   try {
     const { blogId } = req.params;
     const query: IBlogReviewQuery = (req as any).validatedQuery || req.query;
+    const user = (req as any).user;
+    const isAdmin = user?.role === 'ADMIN';
     
-    const result = await blogReviewService.getReviewsByBlogId(blogId, query);
+    const result = await blogReviewService.getReviewsByBlogId(blogId, query, isAdmin);
 
     return res.status(200).json({
       success: true,
@@ -118,10 +122,21 @@ export const getReviewsByBlogId = async (req: Request, res: Response) => {
 export const getBlogReviewById = async (req: Request, res: Response) => {
   try {
     const { reviewId } = req.params;
+    const user = (req as any).user;
+    const isAdmin = user?.role === 'ADMIN';
     
     const review = await blogReviewService.getBlogReviewById(reviewId);
     
     if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: "Review not found",
+        data: null,
+      });
+    }
+
+    // Hide review from non-admin users if it's hidden
+    if (!isAdmin && review.isHidden) {
       return res.status(404).json({
         success: false,
         message: "Review not found",
@@ -144,13 +159,140 @@ export const getBlogReviewById = async (req: Request, res: Response) => {
   }
 };
 
-// Update review approval status (admin only)
-// Approval endpoints removed
+// Update blog review (owner or admin)
+export const updateBlogReview = async (req: Request, res: Response) => {
+  try {
+    const { reviewId } = req.params;
+    const user = (req as any).user;
+    
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+        error: "User not authenticated",
+      });
+    }
 
-// Delete blog review
+    // Get the review to check ownership
+    const review = await blogReviewService.getBlogReviewById(reviewId);
+    
+    if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: "Review not found",
+        data: null,
+      });
+    }
+
+    // Check if user is owner or admin
+    const isOwner = review.userId === user.id;
+    const isAdmin = user.role === 'ADMIN';
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: "Permission denied",
+        error: "You can only update your own reviews",
+      });
+    }
+
+    const updatedReview = await blogReviewService.updateBlogReview(reviewId, req.body);
+
+    return res.status(200).json({
+      success: true,
+      message: "Review updated successfully",
+      data: updatedReview,
+    });
+  } catch (error) {
+    console.error("Error updating blog review:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update blog review",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Hide blog review (admin only)
+export const hideBlogReview = async (req: Request, res: Response) => {
+  try {
+    const { reviewId } = req.params;
+    
+    const review = await blogReviewService.hideBlogReview(reviewId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Review hidden successfully",
+      data: review,
+    });
+  } catch (error) {
+    console.error("Error hiding blog review:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to hide blog review",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Unhide blog review (admin only)
+export const unhideBlogReview = async (req: Request, res: Response) => {
+  try {
+    const { reviewId } = req.params;
+    
+    const review = await blogReviewService.unhideBlogReview(reviewId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Review unhidden successfully",
+      data: review,
+    });
+  } catch (error) {
+    console.error("Error unhiding blog review:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to unhide blog review",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Delete blog review (owner or admin)
 export const deleteBlogReview = async (req: Request, res: Response) => {
   try {
     const { reviewId } = req.params;
+    const user = (req as any).user;
+    
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+        error: "User not authenticated",
+      });
+    }
+
+    // Get the review to check ownership
+    const review = await blogReviewService.getBlogReviewById(reviewId);
+    
+    if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: "Review not found",
+        data: null,
+      });
+    }
+
+    // Check if user is owner or admin
+    const isOwner = review.userId === user.id;
+    const isAdmin = user.role === 'ADMIN';
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: "Permission denied",
+        error: "You can only delete your own reviews",
+      });
+    }
     
     const deleted = await blogReviewService.deleteBlogReview(reviewId);
     
@@ -172,6 +314,28 @@ export const deleteBlogReview = async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       message: "Failed to delete blog review",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Delete all reviews for a blog (admin only)
+export const deleteAllReviewsByBlogId = async (req: Request, res: Response) => {
+  try {
+    const { blogId } = req.params;
+    
+    const deletedCount = await blogReviewService.deleteAllReviewsByBlogId(blogId);
+
+    return res.status(200).json({
+      success: true,
+      message: `Successfully deleted ${deletedCount} review(s)`,
+      data: { deletedCount },
+    });
+  } catch (error) {
+    console.error("Error deleting all blog reviews:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete blog reviews",
       error: error instanceof Error ? error.message : "Unknown error",
     });
   }

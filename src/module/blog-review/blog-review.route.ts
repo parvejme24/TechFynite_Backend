@@ -4,30 +4,40 @@ import {
   createBlogReviewReply,
   getReviewsByBlogId,
   getBlogReviewById,
+  updateBlogReview,
+  hideBlogReview,
+  unhideBlogReview,
   deleteBlogReview,
+  deleteAllReviewsByBlogId,
   deleteBlogReviewReply,
 } from "./blog-review.controller";
 import {
   validateCreateBlogReview,
   validateCreateBlogReviewReply,
+  validateUpdateBlogReview,
   validateBlogReviewId,
   validateBlogIdParam,
+  validateBlogReviewReplyId,
 } from "./blog-review.validate";
-import { authenticateAdminAndCheckStatus } from "../../middleware/authMiddleware";
+import { authenticateAdminAndCheckStatus, authenticateAndCheckStatus, optionalAuth } from "../../middleware/authMiddleware";
 
 const router = Router();
 
-// Public routes
-router.get("/blog-reviews/:blogId", validateBlogIdParam, getReviewsByBlogId);
-router.get("/blog-reviews/review/:reviewId", validateBlogReviewId, getBlogReviewById);
+// Public routes (with optional auth to filter hidden reviews)
+router.get("/blog-reviews/:blogId", optionalAuth, validateBlogIdParam, getReviewsByBlogId);
+router.get("/blog-reviews/review/:reviewId", optionalAuth, validateBlogReviewId, getBlogReviewById);
 
 // User routes (authentication required)
 router.post("/blog-reviews/:blogId", validateBlogIdParam, validateCreateBlogReview, createBlogReview);
-router.post("/blog-reviews/reply/:reviewId", authenticateAdminAndCheckStatus, validateBlogReviewId, validateCreateBlogReviewReply, createBlogReviewReply);
-router.delete("/blog-reviews/:reviewId", validateBlogReviewId, deleteBlogReview);
-router.delete("/blog-reviews/reply/:replyId", deleteBlogReviewReply);
+router.put("/blog-reviews/:reviewId", authenticateAndCheckStatus, validateBlogReviewId, validateUpdateBlogReview, updateBlogReview);
+router.delete("/blog-reviews/:reviewId", authenticateAndCheckStatus, validateBlogReviewId, deleteBlogReview);
 
-// Admin approval routes removed to match Prisma model
+// Admin routes
+router.post("/blog-reviews/reply/:reviewId", authenticateAdminAndCheckStatus, validateBlogReviewId, validateCreateBlogReviewReply, createBlogReviewReply);
+router.patch("/blog-reviews/:reviewId/hide", authenticateAdminAndCheckStatus, validateBlogReviewId, hideBlogReview);
+router.patch("/blog-reviews/:reviewId/unhide", authenticateAdminAndCheckStatus, validateBlogReviewId, unhideBlogReview);
+router.delete("/blog-reviews/blog/:blogId/all", authenticateAdminAndCheckStatus, validateBlogIdParam, deleteAllReviewsByBlogId);
+router.delete("/blog-reviews/reply/:replyId", authenticateAdminAndCheckStatus, validateBlogReviewReplyId, deleteBlogReviewReply);
 
 export default router;
 
